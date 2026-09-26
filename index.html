@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Weaver — Galaxy Builder & Interest Group Vetting</title>
+  <title>Weaver — Galaxy Builder & Classroom Interest Engine</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
   <style>
-    /* Weaver Design System Tokens — lifted verbatim from Weaver design tokens */
+    /* =========================================================================
+       WEAVER DESIGN SYSTEM TOKENS (verbatim from Weaver design system)
+       ========================================================================= */
     :root {
       /* Neutrals: warm paper canvas, cool-free chrome */
       --canvas: #f3ead8;
@@ -32,21 +34,9 @@
       --highlight: #ffe58a;
       --locked: #dce6ff;
       --changed: #c8f5d8;
-      --diff-add: #d1fae5;
-      --diff-del: #fee2e2;
       --error-surface: #fff1f0;
 
-      /* Calendar & Subject coding */
-      --cal-math: #3d6cff;
-      --cal-ela: #ef5d52;
-      --cal-science: #1ea35a;
-      --cal-ss: #9b5de5;
-      --cal-art: #f77f00;
-      --cal-mix: #6c47ff;
-      --cal-unit: #f5b400;
-      --cal-unit-ink: #3b2500;
-
-      /* Interest pack identity colors */
+      /* Interest pack colors */
       --pack-space: #0ea5e9;
       --pack-dance: #ec4899;
       --pack-bugs: #84cc16;
@@ -56,17 +46,17 @@
       --pack-cooking: #f07167;
       --pack-music: #a855f7;
 
-      /* Student path variables */
-      --student-bg: #000000;
-      --student-nav: #1c1c1e;
-      --student-lock: #3f3f46;
+      /* Cosmic Galaxy Canvas (Weaver student dark substrate) */
+      --galaxy-bg: #09080e;
+      --galaxy-card: rgba(22, 19, 28, 0.78);
+      --galaxy-border: rgba(255, 255, 255, 0.12);
+      --galaxy-orbit-line: rgba(228, 214, 194, 0.18);
 
       /* Typography */
       --font-ui: "Plus Jakarta Sans";
       --font-lesson: "Fraunces";
       --font-sans: var(--font-ui), system-ui, sans-serif;
       --font-serif-display: var(--font-lesson), Georgia, serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
       --text-kicker-size: 0.75rem;
       --text-micro: 0.625rem;
@@ -79,11 +69,6 @@
       --text-2xl: 1.5rem;
       --text-3xl: 1.875rem;
 
-      --leading-tight: 1.15;
-      --leading-snug: 1.35;
-      --leading-normal: 1.5;
-      --leading-lesson: 1.55;
-
       --weight-regular: 400;
       --weight-medium: 500;
       --weight-semibold: 600;
@@ -92,26 +77,22 @@
       --tracking-tight: -0.02em;
       --tracking-wide: 0.05em;
 
-      /* Elevation & Shapes */
-      --shadow-panel: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-chip: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-menu: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-      --shadow-popover: 0 25px 50px -12px rgb(0 0 0 / 0.3);
-
+      /* Shapes & Elevation */
       --radius-shell: 1.5rem;
       --radius-card: 1.25rem;
       --radius-pill: 999px;
 
-      /* Layout */
-      --sidebar-w: 16rem;
-      --topbar-h: 3.5rem;
-      --blur-chrome: 12px;
+      --shadow-panel: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-chip: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-popover: 0 25px 50px -12px rgb(0 0 0 / 0.3);
 
-      /* Motion curve from student path */
+      --topbar-h: 3.5rem;
+      --sidebar-w: 16.5rem;
+      --blur-chrome: 12px;
       --ease-pin: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    /* Dark mode — opt-in for evening planning */
+    /* Evening dark mode toggle */
     html.dark {
       --canvas: #16131c;
       --surface: #221e2c;
@@ -127,8 +108,6 @@
       --signal-mint: #4ade80;
       --highlight: #6b4e12;
       --locked: #2a3358;
-      --cal-unit: #fbbf24;
-      --cal-unit-ink: #1c1400;
     }
 
     *, *::before, *::after {
@@ -141,7 +120,7 @@
       color: var(--ink);
       font-family: var(--font-sans);
       font-size: var(--text-sm);
-      line-height: var(--leading-normal);
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
       min-height: 100vh;
@@ -149,7 +128,7 @@
       flex-direction: column;
     }
 
-    /* Typography Utilities */
+    /* Typography */
     .kicker {
       font-size: var(--text-xs);
       font-weight: var(--weight-semibold);
@@ -175,16 +154,11 @@
       color: var(--ink);
     }
 
-    .text-lesson {
-      font-family: var(--font-serif-display);
-      line-height: var(--leading-lesson);
-    }
-
     /* TopBar Chrome */
     .topbar {
       position: sticky;
       top: 0;
-      z-index: 30;
+      z-index: 40;
       display: flex;
       align-items: center;
       gap: 0.75rem;
@@ -213,7 +187,6 @@
       text-decoration: none;
       white-space: nowrap;
     }
-
     .btn-primary {
       background: var(--ink);
       color: var(--accent-contrast);
@@ -221,22 +194,13 @@
     .btn-primary:hover {
       background: color-mix(in srgb, var(--ink) 85%, transparent);
     }
-
     .btn-outline {
-      background: transparent;
+      background: var(--surface);
       color: var(--ink);
       border-color: var(--line);
     }
     .btn-outline:hover {
       background: var(--surface-muted);
-    }
-
-    .btn-unit {
-      background: var(--cal-unit);
-      color: var(--cal-unit-ink);
-    }
-    .btn-unit:hover {
-      opacity: 0.9;
     }
 
     /* IconDisc */
@@ -252,7 +216,7 @@
       color: var(--ink-soft);
       font-size: var(--text-sm);
       font-family: var(--font-sans);
-      transition: background 120ms ease, color 120ms ease;
+      transition: all 120ms ease;
     }
     .icon-disc:hover {
       background: var(--surface-muted);
@@ -279,25 +243,6 @@
     .badge-locked { background: var(--locked); color: var(--ink-soft); }
     .badge-highlight { background: var(--highlight); color: var(--ink); }
     .badge-error { background: var(--error-surface); color: var(--signal-coral); }
-
-    /* Chips */
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.375rem;
-      border-radius: var(--radius-pill);
-      padding: 0.3125rem 0.75rem;
-      font-size: var(--text-xs);
-      font-weight: var(--weight-medium);
-      font-family: var(--font-sans);
-      border: 1px solid transparent;
-      cursor: pointer;
-      line-height: 1.3;
-      transition: all 120ms ease;
-    }
-    .chip-off { background: var(--surface-muted); color: var(--ink-soft); }
-    .chip-off:hover { background: color-mix(in srgb, var(--surface-muted) 80%, var(--ink)); }
-    .chip-on { background: var(--ink); color: var(--accent-contrast); }
 
     /* StudentChip */
     .student-chip {
@@ -334,21 +279,21 @@
     }
 
     @keyframes alert-pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 93, 82, 0.4); }
-      50% { box-shadow: 0 0 0 6px rgba(239, 93, 82, 0); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 93, 82, 0.45); }
+      50% { box-shadow: 0 0 0 7px rgba(239, 93, 82, 0); }
     }
 
-    @keyframes student-pop {
-      0% { transform: scale(0.85); opacity: 0; }
-      70% { transform: scale(1.05); opacity: 1; }
-      100% { transform: scale(1); opacity: 1; }
+    /* Pop Animation when dropped back up into the galaxy (seg_678-679) */
+    @keyframes pop-into-galaxy {
+      0% { transform: scale(0.4) translateY(14px); opacity: 0; }
+      70% { transform: scale(1.12) translateY(-4px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .animate-galaxy-pop {
+      animation: pop-into-galaxy 0.42s var(--ease-pin) forwards;
     }
 
-    .animate-student-pop {
-      animation: student-pop 0.35s var(--ease-pin) forwards;
-    }
-
-    /* PackAvatar */
+    /* PackAvatar Disc */
     .pack-avatar {
       display: grid;
       place-items: center;
@@ -369,71 +314,137 @@
       font-size: var(--text-micro);
     }
     .pack-avatar-lg {
-      width: 2.75rem;
-      height: 2.75rem;
-      font-size: var(--text-xs);
+      width: 3rem;
+      height: 3rem;
+      font-size: var(--text-sm);
     }
 
-    /* Panels */
-    .panel {
-      background: var(--surface);
-      border-radius: var(--radius-shell);
-      padding: 1.5rem;
-      box-shadow: var(--shadow-panel);
-      border: 1px solid var(--line);
-    }
-
-    /* GroupColumn / Drop targets */
-    .group-column {
-      min-height: 180px;
-      border-radius: var(--radius-card);
-      padding: 1rem;
-      border: 2px dashed var(--line);
-      background: var(--surface-muted);
-      transition: all 140ms ease;
-      display: flex;
-      flex-direction: column;
-    }
-    .group-column.drag-over-match {
-      border: 2px dashed var(--signal-mint) !important;
-      background: var(--changed) !important;
-    }
-    .group-column.drag-over-mismatch {
-      border: 2px dashed var(--signal-coral) !important;
-      background: var(--error-surface) !important;
-    }
-
-    /* Constellation Galaxy Node */
-    .constellation-card {
-      background: var(--surface);
-      border-radius: var(--radius-shell);
-      border: 1px solid var(--line);
-      padding: 1.25rem;
-      box-shadow: var(--shadow-panel);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+    /* =========================================================================
+       GALAXY CENTER STAGE — THE COSMIC CELESTIAL ARENA
+       ========================================================================= */
+    #galaxy-viewport {
       position: relative;
-      transition: all 140ms ease;
-    }
-    .constellation-card.drag-over-match {
-      border: 2px dashed var(--signal-mint);
-      background: var(--changed);
-    }
-    .constellation-card.drag-over-mismatch {
-      border: 2px dashed var(--signal-coral);
-      background: var(--error-surface);
+      background: var(--galaxy-bg);
+      border-radius: var(--radius-shell);
+      overflow: hidden;
+      min-height: 640px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      border: 1px solid var(--line);
     }
 
-    /* Concentric Orbit Rings */
-    .orbit-ring {
+    /* Cosmic Canvas Background */
+    #cosmic-canvas {
       position: absolute;
-      border-radius: 9999px;
-      border: 1px dashed color-mix(in srgb, var(--line) 80%, transparent);
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
       pointer-events: none;
     }
 
-    /* Slide-Over Drawers */
+    /* Top HUD inside Galaxy Viewport */
+    .galaxy-hud {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(180deg, rgba(9, 8, 14, 0.85) 0%, transparent 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Galaxy Clusters Grid / Arena */
+    .galaxy-clusters-container {
+      position: relative;
+      z-index: 5;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 1.25rem;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    /* Galaxy Hub Cluster Card */
+    .galaxy-hub {
+      position: relative;
+      background: var(--galaxy-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--galaxy-border);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s var(--ease-pin);
+      overflow: hidden;
+    }
+
+    /* Real-time Hover States for Drag-and-Drop (Mint match vs Coral red circle from seg_660) */
+    .galaxy-hub.target-match {
+      border: 2px dashed var(--signal-mint) !important;
+      background: rgba(30, 163, 90, 0.18) !important;
+      transform: scale(1.02);
+      box-shadow: 0 0 25px rgba(30, 163, 90, 0.35);
+    }
+
+    .galaxy-hub.target-mismatch {
+      border: 2px dashed var(--signal-coral) !important;
+      background: rgba(239, 93, 82, 0.2) !important;
+      transform: scale(1.02);
+      box-shadow: 0 0 25px rgba(239, 93, 82, 0.4);
+    }
+
+    /* Orbital Zone inside each Galaxy */
+    .orbital-zone {
+      position: relative;
+      border-radius: var(--radius-card);
+      border: 1px dashed var(--galaxy-orbit-line);
+      background: rgba(0, 0, 0, 0.35);
+      padding: 0.875rem;
+      min-height: 125px;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 0.4rem;
+      margin-top: 0.75rem;
+    }
+
+    /* Drop Overlay Banner */
+    .drop-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-card);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      backdrop-filter: blur(4px);
+    }
+    .galaxy-hub.target-match .drop-overlay,
+    .galaxy-hub.target-mismatch .drop-overlay {
+      opacity: 1;
+    }
+
+    /* Orbit Rings visual ornament */
+    .orbit-visual-ring {
+      position: absolute;
+      border-radius: 9999px;
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+      pointer-events: none;
+    }
+
+    /* Drawer Styles */
     .drawer {
       position: fixed;
       top: 0;
@@ -457,8 +468,8 @@
     .drawer-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(26, 20, 16, 0.35);
-      backdrop-filter: blur(2px);
+      background: rgba(26, 20, 16, 0.45);
+      backdrop-filter: blur(3px);
       z-index: 45;
       opacity: 0;
       pointer-events: none;
@@ -492,7 +503,7 @@
       color: var(--ink);
     }
 
-    /* Segmented switch */
+    /* Segmented Switch */
     .segmented {
       display: inline-flex;
       background: var(--surface-muted);
@@ -518,18 +529,18 @@
       color: var(--accent-contrast);
     }
 
-    /* Custom Toast */
+    /* Toast shelf */
     .toast {
       border-radius: var(--radius-pill);
       padding: 0.5rem 1rem;
       font-size: var(--text-xs);
       font-weight: var(--weight-medium);
-      box-shadow: var(--shadow-menu);
+      box-shadow: var(--shadow-popover);
       border: 1px solid var(--line);
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      animation: student-pop 0.25s var(--ease-pin);
+      animation: pop-into-galaxy 0.25s var(--ease-pin);
     }
   </style>
 </head>
@@ -537,7 +548,6 @@
 
   <!-- TopBar Navigation Chrome -->
   <header class="topbar">
-    <!-- Brand Mark: 'W' black disc + Wordmark -->
     <div style="display: flex; align-items: center; gap: 0.625rem; margin-right: 1rem;">
       <div style="width: 1.85rem; height: 1.85rem; border-radius: 999px; background: var(--ink); color: var(--accent-contrast); display: grid; place-items: center; font-weight: var(--weight-bold); font-size: var(--text-xs); letter-spacing: -0.02em;">
         W
@@ -550,19 +560,13 @@
       </div>
     </div>
 
-    <!-- Search input -->
+    <!-- Search Input -->
     <div style="position: relative; max-width: 22rem; flex: 1;">
-      <input type="search" id="input-search" placeholder="Search students or interests…" style="height: 2.125rem; width: 100%; border-radius: var(--radius-pill); border: 1px solid var(--line); background: var(--surface); padding: 0 0.875rem; font-size: var(--text-xs); font-family: var(--font-sans); color: var(--ink); outline: none;">
+      <input type="search" id="input-search" placeholder="Search student or topic…" style="height: 2.125rem; width: 100%; border-radius: var(--radius-pill); border: 1px solid var(--line); background: var(--surface); padding: 0 0.875rem; font-size: var(--text-xs); font-family: var(--font-sans); color: var(--ink); outline: none;">
       <span style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); font-size: var(--text-tiny); color: var(--ink-faint); pointer-events: none;">⌘K</span>
     </div>
 
-    <!-- View Mode Switcher: Constellation vs Columns -->
-    <div class="segmented" style="margin-left: 0.5rem;">
-      <button type="button" class="segmented-btn active" id="btn-view-constellation" onclick="switchView('constellation')">Constellation</button>
-      <button type="button" class="segmented-btn" id="btn-view-columns" onclick="switchView('columns')">Columns</button>
-    </div>
-
-    <!-- Status & Cycle Cadence Pill -->
+    <!-- Cycle Cadence & Vetting Actions -->
     <div style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
       <span class="badge badge-locked" id="cycle-pill">
         October cycle · 14 days left
@@ -578,14 +582,14 @@
         Student intake
       </button>
 
-      <!-- Theme Glyph Toggle (Weaver IconDisc) -->
+      <!-- Theme Toggle -->
       <button type="button" class="icon-disc" id="theme-toggle" title="Toggle daylight / evening mode" aria-label="Toggle theme">
         <span id="theme-glyph">☾</span>
       </button>
     </div>
   </header>
 
-  <!-- Main Work Area: Left Rail + Center Stage -->
+  <!-- Work Surface: Left Roster Rail + Center Galaxy Arena -->
   <div style="display: flex; flex: 1; min-height: calc(100vh - var(--topbar-h));">
 
     <!-- Left Rail: Class Roster & Unassigned Dock -->
@@ -608,12 +612,12 @@
         </button>
       </div>
 
-      <!-- Student Chips Scroll Area -->
+      <!-- Draggable Student Chips List -->
       <div id="roster-chip-list" style="display: flex; flex-direction: column; gap: 0.5rem; flex: 1; overflow-y: auto; padding-right: 0.25rem;">
-        <!-- Injected via JavaScript -->
+        <!-- Injected via JS -->
       </div>
 
-      <!-- Quick action: Suggest Groups -->
+      <!-- Quick Actions -->
       <div style="padding-top: 0.75rem; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 0.5rem;">
         <button type="button" class="btn btn-primary" style="width: 100%;" onclick="suggestGroups()">
           Suggest groups
@@ -627,52 +631,72 @@
       </div>
     </aside>
 
-    <!-- Center Stage: The Galaxy Workspace -->
-    <main style="flex: 1; padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.5rem; overflow-y: auto;">
+    <!-- Center Stage: The Galaxy Center -->
+    <main style="flex: 1; padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.25rem; overflow-y: auto;">
       
-      <!-- Stage Header Panel -->
-      <section class="panel" style="padding: 1.25rem 1.5rem;">
-        <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem;">
-          <div>
-            <p class="kicker">Groups · Curated monthly clusters</p>
-            <h1 class="title-h1" style="font-size: 1.75rem; margin-top: 0.2rem;">Classroom Interest Galaxies</h1>
-            <p style="margin: 0.35rem 0 0; color: var(--ink-soft); max-width: 44rem;">
-              Click a student or drag into a group. Drop targets highlight mint for submitted choices and coral for out-of-interest placements.
-            </p>
+      <!-- Stage Header & Controls -->
+      <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem;">
+        <div>
+          <p class="kicker">Galaxy center stage · 8 active clusters</p>
+          <h1 class="title-h1" style="font-size: 1.75rem; margin-top: 0.2rem;">Classroom Galaxy Canvas</h1>
+          <p style="margin: 0.25rem 0 0; color: var(--ink-soft); max-width: 44rem;">
+            Click and drag kids directly into their interest galaxies. Drop targets pulse mint for submitted preferences and coral for out-of-interest overrides.
+          </p>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+          <span class="badge badge-balanced" id="badge-balance-status">Balanced · ±1 student</span>
+          <button type="button" class="btn btn-outline" onclick="undoEdits()">Undo my edits</button>
+          <button type="button" class="btn btn-primary" onclick="openVettingDrawer()">Curate 8 groups</button>
+        </div>
+      </div>
+
+      <!-- THE GALAXY CENTER VIEWPORT (Spatial Cosmic Canvas) -->
+      <div id="galaxy-viewport">
+        <!-- Cosmic Canvas (Starfield Background) -->
+        <canvas id="cosmic-canvas"></canvas>
+
+        <!-- Galaxy HUD Controls -->
+        <div class="galaxy-hud">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-weight: var(--weight-bold); font-size: var(--text-xs); color: #fff; letter-spacing: 0.04em;">
+              ORBITAL ARENA
+            </span>
+            <span style="font-size: var(--text-micro); padding: 0.2rem 0.5rem; border-radius: var(--radius-pill); background: rgba(255,255,255,0.1); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.15);">
+              Interactive Drag & Pop Engine
+            </span>
           </div>
-          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-            <span class="badge badge-balanced" id="badge-balance-status">Balanced · ±1 student</span>
-            <button type="button" class="btn btn-outline" onclick="undoEdits()">Undo my edits</button>
-            <button type="button" class="btn btn-primary" onclick="openVettingDrawer()">Curate 8 groups</button>
+
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <button type="button" id="btn-toggle-stars" class="btn btn-outline" style="background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.15); font-size: var(--text-tiny); padding: 0.25rem 0.6rem;" onclick="toggleStarDrift()">
+              Stellar Drift: Active
+            </button>
+            <button type="button" class="btn btn-outline" style="background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.15); font-size: var(--text-tiny); padding: 0.25rem 0.6rem;" onclick="suggestGroups()">
+              Auto-Align Orbits
+            </button>
           </div>
         </div>
-      </section>
 
-      <!-- VIEW 1: Constellation Galaxy View (Warm Paper Cosmic System) -->
-      <section id="view-constellation-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
-        <!-- Injected via renderConstellation() -->
-      </section>
+        <!-- Spatial Galaxy Clusters Container -->
+        <div class="galaxy-clusters-container" id="galaxy-clusters-grid">
+          <!-- Injected via renderGalaxyHubs() -->
+        </div>
+      </div>
 
-      <!-- VIEW 2: Columns View (Weaver GroupBuilder Grid) -->
-      <section id="view-columns-container" style="display: none; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
-        <!-- Injected via renderColumns() -->
-      </section>
-
-      <!-- Outliers Strip Panel -->
-      <section class="panel" style="padding: 1.25rem 1.5rem;">
+      <!-- Outliers Strip -->
+      <div style="background: var(--surface); border-radius: var(--radius-card); padding: 1.25rem 1.5rem; border: 1px solid var(--line); box-shadow: var(--shadow-panel);">
         <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem;">
           <div>
             <p class="kicker">Outliers</p>
             <p style="margin: 0.15rem 0 0; color: var(--ink-soft); font-size: var(--text-xs);">
-              Kids whose top submitted interests sit outside the active 8 groups. Teacher may assign or build a custom packet.
+              Kids whose submitted top choices sit outside the active 8 groups. Teacher may assign or curate an outlier studio packet.
             </p>
           </div>
-          <button type="button" class="btn btn-unit" onclick="openVettingDrawer()">Review overlap</button>
+          <button type="button" class="btn btn-outline" onclick="openVettingDrawer()">Review overlap</button>
         </div>
         <div id="outliers-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
           <!-- Injected via renderOutliers() -->
         </div>
-      </section>
+      </div>
 
     </main>
   </div>
@@ -774,7 +798,7 @@
         <p class="kicker">Student interest card</p>
         <h2 class="title-h2" id="detail-student-name" style="font-size: 1.35rem; margin-top: 0.2rem;">Jimmy</h2>
         <p style="margin: 0.25rem 0 0; font-size: var(--text-xs); color: var(--ink-soft);" id="detail-student-tenure">
-          Enrolled in current interest for 1 month
+          Enrolled in active topic for 1 month
         </p>
       </div>
       <button type="button" class="icon-disc" onclick="closeStudentDrawer()">✕</button>
@@ -841,12 +865,12 @@
     </form>
   </aside>
 
-  <!-- Toast Container -->
+  <!-- Toast Shelf -->
   <div id="toast-shelf" style="position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 60; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none;"></div>
 
-  <!-- Application Logic & Data -->
+  <!-- Cosmic Particle Animation & Application Logic -->
   <script>
-    // Audio feedback synth using Web Audio API
+    // Audio synthesizer for pleasant pops and chimes
     class WeaverSynth {
       constructor() { this.ctx = null; }
       init() {
@@ -861,9 +885,9 @@
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(440, this.ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(720, this.ctx.currentTime + 0.08);
-          gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+          osc.frequency.setValueAtTime(480, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(760, this.ctx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.16, this.ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
@@ -877,8 +901,8 @@
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(260, this.ctx.currentTime);
-          osc.frequency.setValueAtTime(190, this.ctx.currentTime + 0.1);
+          osc.frequency.setValueAtTime(250, this.ctx.currentTime);
+          osc.frequency.setValueAtTime(180, this.ctx.currentTime + 0.1);
           gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
           gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
           osc.connect(gain);
@@ -889,6 +913,77 @@
       }
     }
     const synth = new WeaverSynth();
+
+    // Cosmic Canvas Engine inside Galaxy Center
+    let starDriftActive = true;
+    function initCosmicCanvas() {
+      const canvas = document.getElementById('cosmic-canvas');
+      const container = document.getElementById('galaxy-viewport');
+      const ctx = canvas.getContext('2d');
+      let stars = [];
+
+      function resize() {
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      for (let i = 0; i < 90; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          radius: Math.random() * 1.4 + 0.4,
+          alpha: Math.random() * 0.7 + 0.3,
+          speed: Math.random() * 0.18 + 0.04,
+          twinkle: Math.random() * 0.02 + 0.005
+        });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Ambient subtle nebula gradients using Weaver pack colors
+        const grad1 = ctx.createRadialGradient(canvas.width * 0.25, canvas.height * 0.3, 10, canvas.width * 0.25, canvas.height * 0.3, 300);
+        grad1.addColorStop(0, 'rgba(14, 165, 233, 0.08)');
+        grad1.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad1;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const grad2 = ctx.createRadialGradient(canvas.width * 0.75, canvas.height * 0.7, 20, canvas.width * 0.75, canvas.height * 0.7, 350);
+        grad2.addColorStop(0, 'rgba(236, 72, 153, 0.06)');
+        grad2.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad2;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for (let star of stars) {
+          star.alpha += star.twinkle;
+          if (star.alpha > 0.9 || star.alpha < 0.2) star.twinkle = -star.twinkle;
+
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+          ctx.fill();
+
+          if (starDriftActive) {
+            star.y -= star.speed;
+            if (star.y < 0) {
+              star.y = canvas.height;
+              star.x = Math.random() * canvas.width;
+            }
+          }
+        }
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    function toggleStarDrift() {
+      starDriftActive = !starDriftActive;
+      const btn = document.getElementById('btn-toggle-stars');
+      btn.innerText = `Stellar Drift: ${starDriftActive ? 'Active' : 'Paused'}`;
+      synth.pop();
+    }
 
     // Weaver Curated Interest Packs with exact tokens
     const WEAVER_PACKS = [
@@ -902,7 +997,7 @@
       { id: 'pack-music', label: 'Acoustics & Sonic Production', short: 'MU', color: '#a855f7', description: 'Harmonic resonance, frequency synthesis and sound mastering.' }
     ];
 
-    // Students Dataset (First names only, per Weaver strict PII standards)
+    // Students Dataset (First names only per Weaver privacy)
     const STUDENTS_INITIAL = [
       { id: 's-1', firstName: 'Jimmy', tenureMonths: 1, assignedPackId: 'pack-bugs', top5: ['Entomology & Living Biomes', 'Space & Astrophysics', 'Robotics & Autonomous Code', 'Paleontology & Fossil History', 'Marine Biology & Ocean Abyss'], note: 'Interested in colony algorithms.' },
       { id: 's-2', firstName: 'Sophia', tenureMonths: 3, assignedPackId: 'pack-dance', top5: ['Ballet & Kinetic Dance', 'Acoustics & Sonic Production', 'Culinary Arts & Chemistry', 'Space & Astrophysics', 'Entomology & Living Biomes'], note: 'Focusing on kinetic balance.' },
@@ -934,24 +1029,21 @@
     let activePacks = [...WEAVER_PACKS];
     let students = JSON.parse(JSON.stringify(STUDENTS_INITIAL));
     let previousState = JSON.stringify(students);
-    let currentView = 'constellation'; // 'constellation' | 'columns'
-    let rosterFilter = 'unassigned'; // 'unassigned' | 'all'
+    let rosterFilter = 'unassigned';
     let draggedStudentId = null;
     let searchQuery = '';
 
     // DOM Elements
-    const constellationContainer = document.getElementById('view-constellation-container');
-    const columnsContainer = document.getElementById('view-columns-container');
+    const galaxyClustersGrid = document.getElementById('galaxy-clusters-grid');
     const rosterChipList = document.getElementById('roster-chip-list');
     const outliersList = document.getElementById('outliers-list');
     const countUnassigned = document.getElementById('count-unassigned');
     const badgeBalance = document.getElementById('badge-balance-status');
     const toastShelf = document.getElementById('toast-shelf');
 
-    // Initialize application
     function init() {
-      renderConstellation();
-      renderColumns();
+      initCosmicCanvas();
+      renderGalaxyHubs();
       renderRoster();
       renderOutliers();
       updateBalance();
@@ -959,98 +1051,66 @@
       setupSearch();
     }
 
-    // Switch between Constellation view and Columns view
-    function switchView(mode) {
-      currentView = mode;
-      document.getElementById('btn-view-constellation').classList.toggle('active', mode === 'constellation');
-      document.getElementById('btn-view-columns').classList.toggle('active', mode === 'columns');
-      constellationContainer.style.display = mode === 'constellation' ? 'grid' : 'none';
-      columnsContainer.style.display = mode === 'columns' ? 'grid' : 'none';
-    }
+    // Render the Galaxy Center Stage Hubs
+    function renderGalaxyHubs() {
+      galaxyClustersGrid.innerHTML = '';
 
-    // Render Constellation View (Spatial Galaxy Circles in Weaver styling)
-    function renderConstellation() {
-      constellationContainer.innerHTML = '';
       activePacks.forEach(pack => {
         const assigned = students.filter(s => s.assignedPackId === pack.id);
-        const card = document.createElement('div');
-        card.className = 'constellation-card';
-        card.id = `constellation-${pack.id}`;
-        card.dataset.packId = pack.id;
+        const hub = document.createElement('div');
+        hub.className = 'galaxy-hub';
+        hub.id = `hub-${pack.id}`;
+        hub.dataset.packId = pack.id;
 
-        card.innerHTML = `
+        hub.innerHTML = `
+          <!-- Drop Overlay Feedback -->
+          <div class="drop-overlay" style="background: rgba(9, 8, 14, 0.85);">
+            <div class="drop-status-pill" style="padding: 0.35rem 0.875rem; border-radius: var(--radius-pill); font-size: var(--text-xs); font-weight: var(--weight-bold);"></div>
+          </div>
+
+          <!-- Ambient Hub Glow matching Weaver pack color -->
+          <div style="position: absolute; -top: 2rem; -right: 2rem; width: 6rem; height: 6rem; border-radius: 999px; background: ${pack.color}; opacity: 0.15; filter: blur(24px); pointer-events: none;"></div>
+
           <!-- Header -->
-          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem;">
+          <div style="position: relative; z-index: 2; display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem;">
             <div style="display: flex; align-items: center; gap: 0.625rem;">
-              <div class="pack-avatar" style="background: ${pack.color};">${pack.short}</div>
+              <div class="pack-avatar" style="background: ${pack.color}; box-shadow: 0 0 16px ${pack.color}44;">
+                ${pack.short}
+              </div>
               <div>
-                <h3 style="margin: 0; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--ink);">${pack.label}</h3>
-                <span style="font-size: var(--text-tiny); color: var(--ink-faint);">${assigned.length} enrolled</span>
+                <h3 style="margin: 0; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: #fff;">${pack.label}</h3>
+                <span style="font-size: var(--text-tiny); color: #94a3b8;">${assigned.length} in orbit</span>
               </div>
             </div>
-            <span class="badge ${assigned.length >= 2 && assigned.length <= 4 ? 'badge-balanced' : 'badge-neutral'}">
+            <span class="badge ${assigned.length >= 2 && assigned.length <= 4 ? 'badge-balanced' : 'badge-neutral'}" style="font-size: var(--text-micro);">
               ${assigned.length}/4
             </span>
           </div>
 
-          <p style="margin: 0 0 1rem; font-size: var(--text-tiny); color: var(--ink-soft); line-height: 1.4;">${pack.description}</p>
+          <p style="position: relative; z-index: 2; margin: 0.5rem 0 0; font-size: var(--text-tiny); color: #94a3b8; line-height: 1.4;">${pack.description}</p>
 
-          <!-- Orbital Ring Area & Students -->
-          <div class="drop-zone" style="min-height: 120px; border-radius: var(--radius-card); border: 2px dashed var(--line); background: var(--surface-muted); padding: 0.875rem; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 0.4rem; position: relative;">
-            <div style="width: 100%; display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: var(--text-micro); color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.04em;">
-              <span>Orbital cluster</span>
+          <!-- Orbital Area with Concentric Dotted Paths -->
+          <div class="orbital-zone">
+            <div style="width: 100%; display: flex; justify-content: space-between; margin-bottom: 0.25rem; font-size: var(--text-micro); color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+              <span>Orbital trajectory</span>
               <span>Drop target</span>
             </div>
             ${assigned.length === 0 ? `
-              <div style="width: 100%; padding: 1.25rem 0; text-align: center; font-size: var(--text-tiny); color: var(--ink-faint);">
-                Drop student chip here
+              <div style="width: 100%; padding: 1.25rem 0; text-align: center; font-size: var(--text-tiny); color: #64748b;">
+                Drag student chip here to orbit
               </div>
             ` : ''}
           </div>
         `;
 
-        const dropZone = card.querySelector('.drop-zone');
-        assigned.forEach(s => {
-          const chip = createStudentChipElement(s);
-          dropZone.appendChild(chip);
+        const orbitalZone = hub.querySelector('.orbital-zone');
+        assigned.forEach(student => {
+          const chip = createStudentChipElement(student);
+          orbitalZone.appendChild(chip);
         });
 
-        setupDropZoneEvents(card, pack);
-        constellationContainer.appendChild(card);
-      });
-    }
-
-    // Render Columns View (Classic GroupBuilder)
-    function renderColumns() {
-      columnsContainer.innerHTML = '';
-      activePacks.forEach(pack => {
-        const assigned = students.filter(s => s.assignedPackId === pack.id);
-        const col = document.createElement('div');
-        col.className = 'group-column';
-        col.id = `col-${pack.id}`;
-        col.dataset.packId = pack.id;
-
-        col.innerHTML = `
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-            <div style="display: flex; align-items: center; gap: 0.4rem;">
-              <span class="pack-avatar pack-avatar-sm" style="background: ${pack.color};">${pack.short}</span>
-              <p style="margin: 0; font-size: var(--text-sm); font-weight: var(--weight-semibold);">${pack.label}</p>
-            </div>
-            <span style="font-size: var(--text-xs); color: var(--ink-faint); font-variant-numeric: tabular-nums;">${assigned.length}</span>
-          </div>
-          <div class="col-chips" style="display: flex; flex-wrap: wrap; align-content: flex-start; gap: 0.375rem; flex: 1; min-height: 80px;">
-            ${assigned.length === 0 ? `<span style="font-size: var(--text-tiny); color: var(--ink-faint); margin: auto;">Empty group</span>` : ''}
-          </div>
-        `;
-
-        const chipsArea = col.querySelector('.col-chips');
-        assigned.forEach(s => {
-          const chip = createStudentChipElement(s);
-          chipsArea.appendChild(chip);
-        });
-
-        setupDropZoneEvents(col, pack);
-        columnsContainer.appendChild(col);
+        setupGalaxyDropZone(hub, pack);
+        galaxyClustersGrid.appendChild(hub);
       });
     }
 
@@ -1061,7 +1121,7 @@
       const isMatch = assignedPack ? student.top5.includes(assignedPack.label) : false;
       const isMismatch = assignedPack && !isMatch;
 
-      chip.className = `student-chip animate-student-pop ${isMismatch ? 'mismatch-alert' : ''}`;
+      chip.className = `student-chip animate-galaxy-pop ${isMismatch ? 'mismatch-alert' : ''}`;
       chip.draggable = true;
       chip.dataset.studentId = student.id;
 
@@ -1074,14 +1134,14 @@
         draggedStudentId = student.id;
         e.dataTransfer.setData('text/plain', student.id);
         e.dataTransfer.effectAllowed = 'move';
-        chip.style.opacity = '0.5';
+        chip.style.opacity = '0.4';
         synth.pop();
       });
 
       chip.addEventListener('dragend', () => {
         chip.style.opacity = '1';
         draggedStudentId = null;
-        clearHighlights();
+        clearDropHighlights();
       });
 
       chip.addEventListener('click', () => {
@@ -1092,8 +1152,11 @@
     }
 
     // Drag and Drop target logic with transcript segment 660 feedback
-    function setupDropZoneEvents(container, pack) {
-      container.addEventListener('dragover', (e) => {
+    function setupGalaxyDropZone(hub, pack) {
+      const overlay = hub.querySelector('.drop-overlay');
+      const pill = hub.querySelector('.drop-status-pill');
+
+      hub.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
 
@@ -1103,24 +1166,31 @@
 
         const isAffinityMatch = student.top5.includes(pack.label);
         if (isAffinityMatch) {
-          container.classList.add('drag-over-match');
-          container.classList.remove('drag-over-mismatch');
+          hub.classList.add('target-match');
+          hub.classList.remove('target-mismatch');
+          pill.style.background = 'var(--changed)';
+          pill.style.color = 'var(--signal-mint)';
+          const rank = student.top5.indexOf(pack.label) + 1;
+          pill.innerText = `✓ Preference Choice #${rank}`;
         } else {
-          // Red warning ring from transcript seg_660
-          container.classList.add('drag-over-mismatch');
-          container.classList.remove('drag-over-match');
+          // Coral / Red Warning Circle from transcript seg_660
+          hub.classList.add('target-mismatch');
+          hub.classList.remove('target-match');
+          pill.style.background = 'var(--error-surface)';
+          pill.style.color = 'var(--signal-coral)';
+          pill.innerText = `● Outside Top 5 Choices (Override)`;
         }
       });
 
-      container.addEventListener('dragleave', (e) => {
-        if (!container.contains(e.relatedTarget)) {
-          container.classList.remove('drag-over-match', 'drag-over-mismatch');
+      hub.addEventListener('dragleave', (e) => {
+        if (!hub.contains(e.relatedTarget)) {
+          hub.classList.remove('target-match', 'target-mismatch');
         }
       });
 
-      container.addEventListener('drop', (e) => {
+      hub.addEventListener('drop', (e) => {
         e.preventDefault();
-        container.classList.remove('drag-over-match', 'drag-over-mismatch');
+        hub.classList.remove('target-match', 'target-mismatch');
 
         const studentId = e.dataTransfer.getData('text/plain') || draggedStudentId;
         if (!studentId) return;
@@ -1129,9 +1199,9 @@
       });
     }
 
-    function clearHighlights() {
-      document.querySelectorAll('.constellation-card, .group-column').forEach(el => {
-        el.classList.remove('drag-over-match', 'drag-over-mismatch');
+    function clearDropHighlights() {
+      document.querySelectorAll('.galaxy-hub').forEach(el => {
+        el.classList.remove('target-match', 'target-mismatch');
       });
     }
 
@@ -1148,20 +1218,19 @@
       if (isMatch) {
         synth.pop();
         const rank = student.top5.indexOf(pack.label) + 1;
-        showToast(`${student.firstName} placed in ${pack.label} (Choice #${rank})`, 'mint');
+        showToast(`✦ ${student.firstName} popped into ${pack.label} (Choice #${rank})`, 'mint');
       } else {
         synth.warning();
-        showToast(`Mismatch alert: ${student.firstName} placed in ${pack.label} (outside Top 5)`, 'coral');
+        showToast(`● Mismatch Alert: ${student.firstName} assigned to ${pack.label} (outside Top 5)`, 'coral');
       }
 
-      renderConstellation();
-      renderColumns();
+      renderGalaxyHubs();
       renderRoster();
       renderOutliers();
       updateBalance();
     }
 
-    // Render left roster dock
+    // Left Rail Roster
     function renderRoster() {
       rosterChipList.innerHTML = '';
       const unassigned = students.filter(s => !s.assignedPackId);
@@ -1191,13 +1260,12 @@
             ${topPack ? `<span class="pack-avatar pack-avatar-sm" style="background: ${topPack.color};">${topPack.short}</span>` : '<span class="pack-avatar pack-avatar-sm" style="background: var(--ink-faint);">—</span>'}
             <div>
               <div style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--ink);">${s.firstName}</div>
-              <div style="font-size: var(--text-micro); color: var(--ink-faint);">${s.assignedPackId ? 'Assigned' : 'Unassigned'}</div>
+              <div style="font-size: var(--text-micro); color: var(--ink-faint);">${s.assignedPackId ? 'In orbit' : 'Unassigned'}</div>
             </div>
           </div>
           <button type="button" class="btn btn-outline" style="padding: 0.2rem 0.5rem; font-size: var(--text-micro);" onclick="openStudentDrawer('${s.id}')">Inspect</button>
         `;
 
-        // Make whole row draggable
         row.draggable = true;
         row.addEventListener('dragstart', (e) => {
           draggedStudentId = s.id;
@@ -1209,7 +1277,7 @@
       });
     }
 
-    // Render Outliers Strip
+    // Outliers Strip
     function renderOutliers() {
       outliersList.innerHTML = '';
       const activeLabels = activePacks.map(p => p.label);
@@ -1229,7 +1297,6 @@
       });
     }
 
-    // Update group balance metric
     function updateBalance() {
       const counts = activePacks.map(p => students.filter(s => s.assignedPackId === p.id).length);
       const min = Math.min(...counts);
@@ -1240,7 +1307,6 @@
       badgeBalance.innerText = isBalanced ? 'Balanced · ±1 student' : 'Uneven · drag to fix';
     }
 
-    // Filter Roster Tabs
     function filterRoster(mode) {
       rosterFilter = mode;
       document.getElementById('tab-unassigned').style.background = mode === 'unassigned' ? 'var(--surface-muted)' : 'transparent';
@@ -1250,20 +1316,17 @@
       renderRoster();
     }
 
-    // Suggest Groups (Heuristic from Weaver group builder)
     function suggestGroups() {
       previousState = JSON.stringify(students);
       const counts = {};
       activePacks.forEach(p => counts[p.id] = 0);
 
       students.forEach(s => {
-        // Find first matching active pack
         const match = activePacks.find(p => s.top5.includes(p.label));
         if (match) {
           s.assignedPackId = match.id;
           counts[match.id] += 1;
         } else {
-          // Assign to least filled pack
           const sorted = activePacks.slice().sort((a, b) => counts[a.id] - counts[b.id]);
           s.assignedPackId = sorted[0].id;
           counts[sorted[0].id] += 1;
@@ -1271,8 +1334,7 @@
       });
 
       synth.pop();
-      renderConstellation();
-      renderColumns();
+      renderGalaxyHubs();
       renderRoster();
       renderOutliers();
       updateBalance();
@@ -1287,8 +1349,7 @@
       if (previousState) {
         students = JSON.parse(previousState);
         synth.pop();
-        renderConstellation();
-        renderColumns();
+        renderGalaxyHubs();
         renderRoster();
         renderOutliers();
         updateBalance();
@@ -1296,13 +1357,12 @@
       }
     }
 
-    // Advance Monthly Cycle (seg_648, 656)
+    // Advance Monthly Cycle
     document.getElementById('btn-advance-cycle').addEventListener('click', () => {
       previousState = JSON.stringify(students);
       let shifted = 0;
       students.forEach(s => {
         s.tenureMonths += 1;
-        // 30% chance for a student to rotate interest priority
         if (Math.random() < 0.3) {
           const removed = s.top5.shift();
           s.top5.push(removed);
@@ -1311,8 +1371,7 @@
         }
       });
       synth.pop();
-      renderConstellation();
-      renderColumns();
+      renderGalaxyHubs();
       renderRoster();
       renderOutliers();
       showToast(`Advanced to November cycle (${shifted} kids shifted preferences)`, 'mint');
@@ -1401,7 +1460,6 @@
       const tbody = document.getElementById('table-overlap-body');
       tbody.innerHTML = '';
 
-      // Count overlap frequency across all students
       const freq = {};
       students.forEach(s => {
         s.top5.forEach(t => freq[t] = (freq[t] || 0) + 1);
@@ -1463,8 +1521,7 @@
       }
       synth.pop();
       renderVettingTable();
-      renderConstellation();
-      renderColumns();
+      renderGalaxyHubs();
       renderOutliers();
       updateBalance();
     }
@@ -1477,7 +1534,7 @@
     // Student Intake Drawer
     function openIntakeDrawer() {
       const select = document.getElementById('select-intake-student');
-      select.innerHTML = students.map(s => `<option value="${s.id}">${s.firstName} (${s.assignedPackId ? 'Assigned' : 'Unassigned'})</option>`).join('');
+      select.innerHTML = students.map(s => `<option value="${s.id}">${s.firstName} (${s.assignedPackId ? 'In orbit' : 'Unassigned'})</option>`).join('');
 
       loadStudentIntakeForm(students[0].id);
       document.getElementById('intake-drawer').classList.add('open');
@@ -1521,14 +1578,13 @@
       student.top5 = newChoices;
       closeIntakeDrawer();
       synth.pop();
-      renderConstellation();
-      renderColumns();
+      renderGalaxyHubs();
       renderRoster();
       renderOutliers();
       showToast(`Updated ${student.firstName}'s Top 5 submissions`, 'mint');
     });
 
-    // Theme Setup (Daylight warm paper vs Evening dark)
+    // Theme Setup
     function setupTheme() {
       const toggle = document.getElementById('theme-toggle');
       const glyph = document.getElementById('theme-glyph');
@@ -1553,7 +1609,7 @@
       });
     }
 
-    // Custom Toast Notification System
+    // Toast
     function showToast(msg, tone = 'neutral') {
       const toast = document.createElement('div');
       const styles = {
@@ -1575,11 +1631,9 @@
       }, 3500);
     }
 
-    // Wire up buttons
     document.getElementById('btn-open-vetting').onclick = openVettingDrawer;
     document.getElementById('btn-open-intake').onclick = openIntakeDrawer;
 
-    // Boot
     init();
   </script>
 </body>
