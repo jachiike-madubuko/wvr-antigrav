@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galaxy UI — Student Interest Exploration & Vetting Engine</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-space: #070913;
+      --card-glass: rgba(18, 24, 43, 0.78);
+      --border-glass: rgba(255, 255, 255, 0.12);
+      --accent-cyan: #00f0ff;
+      --accent-rose: #ff3366;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-purple: #8b5cf6;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-space);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: #e2e8f0;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    .font-space {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    /* Cosmic Canvas Background */
+    #space-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Glassmorphism panels */
+    .glass-panel {
+      background: var(--card-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+    }
+
+    .glass-pill {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Pulse Glow Animations */
+    @keyframes orbit-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse-halo {
+      0%, 100% { opacity: 0.35; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.06); }
+    }
+
+    @keyframes pop-up {
+      0% { transform: scale(0.2) translateY(20px); opacity: 0; }
+      60% { transform: scale(1.25) translateY(-6px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    @keyframes warning-ring {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    }
+
+    @keyframes match-ring {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    }
+
+    .animate-pop-up {
+      animation: pop-up 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    .mismatch-alert-ring {
+      animation: warning-ring 1.5s infinite;
+      border: 2px solid #ef4444 !important;
+    }
+
+    .match-glow-ring {
+      animation: match-ring 1.5s infinite;
+      border: 2px solid #10b981 !important;
+    }
+
+    /* Galaxy Node Card */
+    .galaxy-cluster {
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .galaxy-cluster.drag-target-valid {
+      transform: scale(1.03);
+      border-color: #10b981 !important;
+      box-shadow: 0 0 35px rgba(16, 185, 129, 0.35);
+    }
+
+    .galaxy-cluster.drag-target-warning {
+      transform: scale(1.03);
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 35px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Student Avatar Badge */
+    .student-badge {
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: grab;
+    }
+
+    .student-badge:active {
+      cursor: grabbing;
+    }
+
+    .student-badge:hover {
+      transform: translateY(-2px) scale(1.04);
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.6);
+    }
+  </style>
+</head>
+<body class="relative min-h-screen text-slate-100 flex flex-col">
+
+  <!-- Interactive Cosmic Canvas -->
+  <canvas id="space-canvas"></canvas>
+
+  <!-- Top Global Header -->
+  <header class="relative z-20 px-6 py-4 border-b border-white/10 glass-panel flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-cyan-500/25">
+        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-xl font-bold tracking-tight font-space text-white">Galaxy UI</h1>
+          <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/25">v2.4 Spatial Engine</span>
+        </div>
+        <p class="text-xs text-slate-400">Student Interest Exploration, Cadence Rotation & Vetting Platform</p>
+      </div>
+    </div>
+
+    <!-- Cycle Cadence Status & Controls -->
+    <div class="flex items-center gap-3">
+      <div class="glass-pill px-4 py-2 rounded-xl flex items-center gap-3">
+        <div class="relative flex items-center justify-center">
+          <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping absolute opacity-75"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+        </div>
+        <div class="text-xs">
+          <div class="font-medium text-slate-300">Monthly Cycle: <span class="text-white font-bold" id="current-month-label">October 2026</span></div>
+          <div class="text-[10px] text-slate-400">Rotation in: <span class="text-amber-400 font-mono font-semibold" id="cycle-countdown">14 Days 06:42:10</span></div>
+        </div>
+        <button id="btn-advance-cycle" title="Simulate Monthly Interest Rotation" class="ml-2 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-600/60 hover:bg-indigo-600 text-indigo-100 transition-colors border border-indigo-400/30 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          Advance Cycle
+        </button>
+      </div>
+
+      <!-- Action Buttons -->
+      <button id="btn-open-vetting" class="glass-pill px-4 py-2 rounded-xl text-xs font-semibold text-white hover:bg-white/10 transition flex items-center gap-2 border border-purple-500/30 bg-purple-950/40">
+        <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        Teacher Vetting & Overlap
+        <span class="px-1.5 py-0.2 bg-purple-500/20 text-purple-300 rounded text-[10px]" id="vetting-indicator">8 Active</span>
+      </button>
+
+      <button id="btn-student-intake" class="glass-pill px-4 py-2 rounded-xl text-xs font-semibold text-white hover:bg-white/10 transition flex items-center gap-2 border border-cyan-500/30 bg-cyan-950/40">
+        <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Simulate Student Intake
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Canvas Viewport -->
+  <main class="relative z-10 flex-1 flex overflow-hidden">
+
+    <!-- Left Side Drawer: Unassigned / Transitioning Students Roster -->
+    <aside id="roster-drawer" class="w-80 border-r border-white/10 glass-panel flex flex-col transition-all duration-300 z-20">
+      <div class="p-4 border-b border-white/10 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-bold text-white uppercase tracking-wider font-space flex items-center gap-2">
+            Class Roster Dock
+            <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-white/10 text-cyan-300" id="roster-count">24</span>
+          </h2>
+          <p class="text-[11px] text-slate-400">Drag kids directly into interest galaxies</p>
+        </div>
+        <button id="btn-auto-assign" title="Auto-match students based on Top 1 affinity" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+          Auto Match
+        </button>
+      </div>
+
+      <!-- Filter / Search -->
+      <div class="px-3 pt-3 pb-2">
+        <div class="relative">
+          <input type="text" id="roster-search" placeholder="Search student or preference..." class="w-full bg-slate-900/80 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+          <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Tabs: All vs Unassigned -->
+      <div class="flex border-b border-white/10 px-3 text-xs">
+        <button id="tab-unassigned" class="flex-1 py-2 font-medium text-cyan-400 border-b-2 border-cyan-400">
+          Unassigned (<span id="unassigned-badge">0</span>)
+        </button>
+        <button id="tab-all-students" class="flex-1 py-2 font-medium text-slate-400 hover:text-slate-200">
+          All Class (24)
+        </button>
+      </div>
+
+      <!-- Student List -->
+      <div id="roster-list" class="flex-1 overflow-y-auto p-3 space-y-2.5">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Drag Legend / UX Hint -->
+      <div class="p-3 border-t border-white/10 bg-slate-950/50 text-[11px] text-slate-400 flex flex-col gap-1.5">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          <span>Green glow: <b>Affinity Match</b> (in Top 5)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+          <span>Red circle: <b>Mismatch Warning</b> (not in choices)</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center Stage: The Galaxy Spatial Arena -->
+    <section class="flex-1 relative overflow-y-auto p-6 flex flex-col">
+      <!-- Top Canvas Controls & HUD -->
+      <div class="flex items-center justify-between mb-5 z-10">
+        <div class="flex items-center gap-2">
+          <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Active Interest Galaxies</span>
+          <span class="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Capped at 8 Clusters</span>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button id="btn-toggle-grid" class="glass-pill px-3 py-1.5 text-xs text-slate-300 hover:text-white rounded-lg transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+            Toggle View Mode
+          </button>
+          <button id="btn-reset-layout" class="glass-pill px-3 py-1.5 text-xs text-slate-300 hover:text-white rounded-lg transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            Reset Clusters
+          </button>
+        </div>
+      </div>
+
+      <!-- Galaxies Grid Arena -->
+      <div id="galaxies-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 flex-1 pb-16">
+        <!-- 8 Active Galaxies dynamically rendered -->
+      </div>
+    </section>
+
+    <!-- Right Slide-Over: Student Profile & Skin Customizer -->
+    <aside id="student-drawer" class="w-88 border-l border-white/10 glass-panel fixed right-0 top-0 h-full transform translate-x-full transition-transform duration-300 z-40 flex flex-col p-6 overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-white/10">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 font-space">Student Detail</h3>
+        <button id="btn-close-drawer" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <div id="drawer-content" class="mt-4 space-y-5">
+        <!-- Rendered dynamically -->
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- Modal 1: Teacher Vetting & Overlap Analysis Dashboard -->
+  <div id="modal-vetting" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-4xl max-h-[90vh] rounded-2xl flex flex-col overflow-hidden border border-purple-500/30">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-purple-950/30">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-lg font-bold text-white font-space">Teacher Curation & Overlap Analysis</h2>
+            <span class="px-2 py-0.5 text-xs rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 font-semibold">Teacher Agency Hub</span>
+          </div>
+          <p class="text-xs text-slate-400">Vet submitted student interests, eliminate low-value topics, and curate the 7–8 active galaxies.</p>
+        </div>
+        <button id="btn-close-vetting" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-white/10">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-6">
+        
+        <!-- Summary Stats Banner -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="glass-pill p-3.5 rounded-xl border border-white/10">
+            <div class="text-[11px] text-slate-400 uppercase font-semibold">Total Students</div>
+            <div class="text-2xl font-bold text-white mt-1">24</div>
+            <div class="text-[10px] text-emerald-400 mt-0.5">100% submitted Top 5</div>
+          </div>
+          <div class="glass-pill p-3.5 rounded-xl border border-white/10">
+            <div class="text-[11px] text-slate-400 uppercase font-semibold">Unique Topics Ingested</div>
+            <div class="text-2xl font-bold text-white mt-1" id="stat-unique-topics">19</div>
+            <div class="text-[10px] text-purple-400 mt-0.5">5 flagged for moderation</div>
+          </div>
+          <div class="glass-pill p-3.5 rounded-xl border border-white/10">
+            <div class="text-[11px] text-slate-400 uppercase font-semibold">Active Galaxy Limit</div>
+            <div class="text-2xl font-bold text-cyan-400 mt-1"><span id="stat-active-count">8</span> / 8</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Recommended 7–8 clusters</div>
+          </div>
+          <div class="glass-pill p-3.5 rounded-xl border border-white/10">
+            <div class="text-[11px] text-slate-400 uppercase font-semibold">Outlier Students</div>
+            <div class="text-2xl font-bold text-amber-400 mt-1" id="stat-outliers-count">2</div>
+            <div class="text-[10px] text-amber-300/80 mt-0.5">Needs manual placement</div>
+          </div>
+        </div>
+
+        <!-- Overlap Histogram / Topic Selection -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-white font-space flex items-center gap-2">
+              Topic Overlap Frequency Analysis
+              <span class="text-xs text-slate-400 font-normal">(Ranked by class student overlap)</span>
+            </h3>
+            <span class="text-xs text-slate-400">Click checkboxes to curate active galaxies (Max 8)</span>
+          </div>
+
+          <div id="vetting-topic-list" class="space-y-2.5">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Flagged / Inappropriate / Low Depth Outliers Filtered Out -->
+        <div class="p-4 rounded-xl bg-rose-950/20 border border-rose-500/20">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-xs font-bold text-rose-300 uppercase tracking-wide flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              Teacher Moderation Filter: Discarded Slacker / Low-Value Topics
+            </h4>
+            <span class="text-[10px] text-slate-400">Topics rejected per teacher discretion</span>
+          </div>
+          <p class="text-xs text-slate-400 mb-3">
+            The transcript highlights students potentially proposing trivial topics like <i>"the frame of the window"</i> to evade work. Teachers maintain final educational veto power.
+          </p>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span class="px-2.5 py-1 rounded bg-rose-900/30 text-rose-300 border border-rose-800/40 line-through">"The Window Frame" (Jimmy B.) - Rejected: Insufficient Depth</span>
+            <span class="px-2.5 py-1 rounded bg-rose-900/30 text-rose-300 border border-rose-800/40 line-through">"Weapons & Guns" (Anonymous) - Rejected: Policy Inappropriate</span>
+            <span class="px-2.5 py-1 rounded bg-rose-900/30 text-rose-300 border border-rose-800/40 line-through">"Sleeping in Class" (Leo K.) - Rejected: Non-educational</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-3.5 border-t border-white/10 bg-slate-900/60 flex items-center justify-between">
+        <span class="text-xs text-slate-400">Changes apply immediately to spatial clusters</span>
+        <div class="flex gap-2">
+          <button id="btn-save-vetting" class="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-600/30 transition">
+            Apply 8 Active Galaxies
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Student Top 5 Intake Simulation -->
+  <div id="modal-intake" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-lg rounded-2xl flex flex-col overflow-hidden border border-cyan-500/30">
+      <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-cyan-950/30">
+        <div>
+          <h2 class="text-lg font-bold text-white font-space">Student Interest Submission (Top 5)</h2>
+          <p class="text-xs text-slate-400">Monthly intake form where kids submit their passions</p>
+        </div>
+        <button id="btn-close-intake" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <form id="intake-form" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Select Student</label>
+          <select id="intake-student-select" class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+            <!-- options populated via js -->
+          </select>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-semibold text-slate-300">Monthly Intention</label>
+            <span class="text-[10px] text-cyan-400 font-medium">Cadence Choice</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10">
+              <input type="radio" name="cadence-action" value="stay" class="text-cyan-500">
+              <span>Stay in current interest</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10">
+              <input type="radio" name="cadence-action" value="change" checked class="text-cyan-500">
+              <span>Explore new interests</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-semibold text-slate-300">Rank Top 5 Interests</label>
+          <input type="text" id="intake-rank-1" placeholder="1. Primary Passion (e.g. Ballet)" class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+          <input type="text" id="intake-rank-2" placeholder="2. Second Choice" class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+          <input type="text" id="intake-rank-3" placeholder="3. Third Choice" class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+          <input type="text" id="intake-rank-4" placeholder="4. Fourth Choice" class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+          <input type="text" id="intake-rank-5" placeholder="5. Fifth Choice" class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+        </div>
+
+        <button type="submit" class="w-full py-2.5 rounded-xl text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition mt-2 shadow-lg shadow-cyan-600/30">
+          Submit Monthly Preferences
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Floating Toast Notifications for Drag & Drop Feedback -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Audio Context Synthesizer (No external sound files required) -->
+  <script>
+    // Web Audio Sound Generator for tactile drag & pop feedback
+    class SpaceAudio {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+      }
+      playPop() {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(780, this.ctx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.14);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.15);
+        } catch(e) {}
+      }
+      playWarning() {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+          osc.frequency.setValueAtTime(170, this.ctx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.22);
+        } catch(e) {}
+      }
+      playChime() {
+        try {
+          this.init();
+          const freqs = [523.25, 659.25, 783.99];
+          freqs.forEach((f, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = f;
+            gain.gain.setValueAtTime(0.12, this.ctx.currentTime + idx * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.06 + 0.3);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(this.ctx.currentTime + idx * 0.06);
+            osc.stop(this.ctx.currentTime + idx * 0.06 + 0.35);
+          });
+        } catch(e) {}
+      }
+    }
+    const audioSynth = new SpaceAudio();
+
+    // Cosmic Canvas Background Animation
+    function initStarfield() {
+      const canvas = document.getElementById('space-canvas');
+      const ctx = canvas.getContext('2d');
+      let stars = [];
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
+
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+
+      for (let i = 0; i < 160; i++) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: Math.random() * 1.5 + 0.3,
+          alpha: Math.random() * 0.8 + 0.2,
+          speed: Math.random() * 0.2 + 0.05,
+          twinkle: Math.random() * 0.03 + 0.01
+        });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, width, height);
+
+        // Ambient Nebulae Glow
+        const grad1 = ctx.createRadialGradient(width * 0.2, height * 0.3, 20, width * 0.2, height * 0.3, 400);
+        grad1.addColorStop(0, 'rgba(99, 102, 241, 0.07)');
+        grad1.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad1;
+        ctx.fillRect(0, 0, width, height);
+
+        const grad2 = ctx.createRadialGradient(width * 0.75, height * 0.7, 50, width * 0.75, height * 0.7, 500);
+        grad2.addColorStop(0, 'rgba(236, 72, 153, 0.05)');
+        grad2.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad2;
+        ctx.fillRect(0, 0, width, height);
+
+        // Stars
+        for (let star of stars) {
+          star.alpha += star.twinkle;
+          if (star.alpha > 0.95 || star.alpha < 0.15) {
+            star.twinkle = -star.twinkle;
+          }
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+          ctx.fill();
+
+          star.y -= star.speed;
+          if (star.y < 0) {
+            star.y = height;
+            star.x = Math.random() * width;
+          }
+        }
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+    initStarfield();
+
+    /* =========================================================================
+       DATA MODELS & STATE
+       Directly capturing details from transcript:
+       - Kids have Top 5 interests
+       - Teachers curate down to 7-8 active galaxies
+       - Drag & drop indicates match vs mismatch (red circle indicator from seg_660)
+       - Pop back up in galaxy animation on drop (seg_678-679)
+       - Skins for students (seg_679)
+       - Monthly rotation cadence (seg_648, 666)
+       ========================================================================= */
+
+    // Avatar skins catalog
+    const AVATAR_SKINS = {
+      astronaut: { name: 'Astro-Pioneer', icon: '👨‍🚀', color: '#00f0ff' },
+      cyber: { name: 'Cyber-Visor', icon: '🥽', color: '#8b5cf6' },
+      nebula: { name: 'Nebula-Crown', icon: '✨', color: '#ec4899' },
+      sol: { name: 'Solar-Flare', icon: '☀️', color: '#f59e0b' },
+      biologist: { name: 'Bio-Explorer', icon: '🌱', color: '#10b981' }
+    };
+
+    // 8 Active Interest Galaxies (Curated from transcript discussion)
+    const INITIAL_GALAXIES = [
+      {
+        id: 'gal-space',
+        name: 'Space & Astrophysics',
+        category: 'Cosmology',
+        color: '#00f0ff',
+        bgGradient: 'from-cyan-950/60 to-blue-950/40',
+        borderColor: 'border-cyan-500/30',
+        icon: '🚀',
+        description: 'Orbital mechanics, stellar bodies & deep space exploration.'
+      },
+      {
+        id: 'gal-ballet',
+        name: 'Ballet & Kinetic Dance',
+        category: 'Performing Arts',
+        color: '#f472b6',
+        bgGradient: 'from-pink-950/60 to-rose-950/40',
+        borderColor: 'border-pink-500/30',
+        icon: '🩰',
+        description: 'Classical choreography, poise & movement physics.'
+      },
+      {
+        id: 'gal-bugs',
+        name: 'Entomology & Living Biomes',
+        category: 'Biosciences',
+        color: '#10b981',
+        bgGradient: 'from-emerald-950/60 to-teal-950/40',
+        borderColor: 'border-emerald-500/30',
+        icon: '🐛',
+        description: 'Insects, ecosystem hierarchies and macro-photography.'
+      },
+      {
+        id: 'gal-robotics',
+        name: 'Robotics & Autonomous Systems',
+        category: 'Engineering',
+        color: '#f59e0b',
+        bgGradient: 'from-amber-950/60 to-orange-950/40',
+        borderColor: 'border-amber-500/30',
+        icon: '🤖',
+        description: 'Micro-controllers, automation logic and sensory motors.'
+      },
+      {
+        id: 'gal-marine',
+        name: 'Marine Biology & Ocean Abyss',
+        category: 'Earth Sciences',
+        color: '#38bdf8',
+        bgGradient: 'from-sky-950/60 to-indigo-950/40',
+        borderColor: 'border-sky-500/30',
+        icon: '🌊',
+        description: 'Bioluminescent trenches, coral ecosystems and marine flora.'
+      },
+      {
+        id: 'gal-paleo',
+        name: 'Paleontology & Fossil History',
+        category: 'Geosciences',
+        color: '#fb923c',
+        bgGradient: 'from-orange-950/60 to-amber-950/40',
+        borderColor: 'border-orange-500/30',
+        icon: '🦖',
+        description: 'Excavation methodologies, evolutionary eras & prehistoric biology.'
+      },
+      {
+        id: 'gal-culinary',
+        name: 'Culinary Chemistry & Gastronomy',
+        category: 'Food Chemistry',
+        color: '#a855f7',
+        bgGradient: 'from-purple-950/60 to-fuchsia-950/40',
+        borderColor: 'border-purple-500/30',
+        icon: '🧪',
+        description: 'Phase changes, emulsification & flavor molecular binding.'
+      },
+      {
+        id: 'gal-audio',
+        name: 'Acoustics & Sonic Production',
+        category: 'Sound Arts',
+        color: '#ec4899',
+        bgGradient: 'from-fuchsia-950/60 to-pink-950/40',
+        borderColor: 'border-fuchsia-500/30',
+        icon: '🎵',
+        description: 'Wave propagation, synthesis, and digital audio mastering.'
+      }
+    ];
+
+    // Class Students Dataset (24 Students with their Top 5 Submitted Interests)
+    const STUDENTS = [
+      {
+        id: 'stu-1',
+        name: 'Jimmy Barnes',
+        avatar: '👦',
+        skin: 'astronaut',
+        tenureMonths: 1,
+        assignedGalaxyId: 'gal-bugs',
+        top5: ['Entomology & Living Biomes', 'Space & Astrophysics', 'Robotics & Autonomous Systems', 'Paleontology & Fossil History', 'Marine Biology & Ocean Abyss'],
+        notes: 'Previously fascinated by bugs; exploring shift to space this cycle.'
+      },
+      {
+        id: 'stu-2',
+        name: 'Sophia Chen',
+        avatar: '👧',
+        skin: 'nebula',
+        tenureMonths: 3,
+        assignedGalaxyId: 'gal-ballet',
+        top5: ['Ballet & Kinetic Dance', 'Acoustics & Sonic Production', 'Culinary Chemistry & Gastronomy', 'Space & Astrophysics', 'Entomology & Living Biomes'],
+        notes: 'Consistent ballet enthusiast for 3 cycles.'
+      },
+      {
+        id: 'stu-3',
+        name: 'Marcus Vance',
+        avatar: '👦',
+        skin: 'cyber',
+        tenureMonths: 2,
+        assignedGalaxyId: 'gal-robotics',
+        top5: ['Robotics & Autonomous Systems', 'Space & Astrophysics', 'Acoustics & Sonic Production', 'Marine Biology & Ocean Abyss', 'Paleontology & Fossil History'],
+        notes: 'Building autonomous sensor array.'
+      },
+      {
+        id: 'stu-4',
+        name: 'Elena Rostova',
+        avatar: '👧',
+        skin: 'biologist',
+        tenureMonths: 1,
+        assignedGalaxyId: 'gal-ballet',
+        top5: ['Ballet & Kinetic Dance', 'Culinary Chemistry & Gastronomy', 'Marine Biology & Ocean Abyss', 'Entomology & Living Biomes', 'Space & Astrophysics'],
+        notes: 'Choreography focus; collaborates with Sophia.'
+      },
+      {
+        id: 'stu-5',
+        name: 'Liam Walker',
+        avatar: '👦',
+        skin: 'sol',
+        tenureMonths: 2,
+        assignedGalaxyId: 'gal-space',
+        top5: ['Space & Astrophysics', 'Paleontology & Fossil History', 'Robotics & Autonomous Systems', 'Acoustics & Sonic Production', 'Marine Biology & Ocean Abyss'],
+        notes: 'Telescope observational logkeeper.'
+      },
+      {
+        id: 'stu-6',
+        name: 'Maya Patel',
+        avatar: '👧',
+        skin: 'biologist',
+        tenureMonths: 2,
+        assignedGalaxyId: 'gal-marine',
+        top5: ['Marine Biology & Ocean Abyss', 'Entomology & Living Biomes', 'Culinary Chemistry & Gastronomy', 'Space & Astrophysics', 'Paleontology & Fossil History'],
+        notes: 'Studying bioluminescent organisms.'
+      },
+      {
+        id: 'stu-7',
+        name: 'Noah Sterling',
+        avatar: '👦',
+        skin: 'astronaut',
+        tenureMonths: 1,
+        assignedGalaxyId: 'gal-paleo',
+        top5: ['Paleontology & Fossil History', 'Entomology & Living Biomes', 'Robotics & Autonomous Systems', 'Space & Astrophysics', 'Marine Biology & Ocean Abyss'],
+        notes: 'Fossil replica model maker.'
+      },
+      {
+        id: 'stu-8',
+        name: 'Aria Thorne',
+        avatar: '👧',
+        skin: 'nebula',
+        tenureMonths: 1,
+        assignedGalaxyId: 'gal-audio',
+        top5: ['Acoustics & Sonic Production', 'Ballet & Kinetic Dance', 'Culinary Chemistry & Gastronomy', 'Robotics & Autonomous Systems', 'Space & Astrophysics'],
+        notes: 'Synthesizing ambient space sounds.'
+      },
+      {
+        id: 'stu-9',
+        name: 'Lucas Kim',
+        avatar: '👦',
+        skin: 'cyber',
+        tenureMonths: 3,
+        assignedGalaxyId: 'gal-robotics',
+        top5: ['Robotics & Autonomous Systems', 'Culinary Chemistry & Gastronomy', 'Space & Astrophysics', 'Acoustics & Sonic Production', 'Paleontology & Fossil History'],
+        notes: 'Working on robotic servo calibration.'
+      },
+      {
+        id: 'stu-10',
+        name: 'Chloe Davis',
+        avatar: '👧',
+        skin: 'biologist',
+        tenureMonths: 2,
+        assignedGalaxyId: 'gal-bugs',
+        top5: ['Entomology & Living Biomes', 'Paleontology & Fossil History', 'Marine Biology & Ocean Abyss', 'Ballet & Kinetic Dance', 'Culinary Chemistry & Gastronomy'],
+        notes: 'Mantises and colony behavior study.'
+      },
+      {
+        id: 'stu-11',
+        name: 'Ethan Hunt',
+        avatar: '👦',
+        skin: 'sol',
+        tenureMonths: 1,
+        assignedGalaxyId: 'gal-culinary',
+        top5: ['Culinary Chemistry & Gastronomy', 'Entomology & Living Biomes', 'Acoustics & Sonic Production', 'Space & Astrophysics', 'Robotics & Autonomous Systems'],
+        notes: 'Molecular spheres & food textures.'
+      },
+      {
+        id: 'stu-12',
+        name: 'Zoe Martinez',
+        avatar: '👧',
+        skin: 'astronaut',
+        tenureMonths: 2,
+        assignedGalaxyId: 'gal-space',
+        top5: ['Space & Astrophysics', 'Marine Biology & Ocean Abyss', 'Robotics & Autonomous Systems', 'Paleontology & Fossil History', 'Ballet & Kinetic Dance'],
+        notes: 'Interested in Mars colonization logistics.'
+      },
+      {
+        id: 'stu-13',
+        name: 'Leo Castillo',
+        avatar: '👦',
+        skin: 'cyber',
+        tenureMonths: 1,
+        assignedGalaxyId: null, // Unassigned outlier
+        top5: ['Robotics & Autonomous Systems', 'Acoustics & Sonic Production', 'Paleontology & Fossil History', 'Space & Astrophysics', 'Marine Biology & Ocean Abyss'],
+        notes: 'Requested change during last rotation.'
+      },
+      {
+        id: 'stu-14',
+        name: 'Hannah Abbott',
+        avatar: '👧',
+        skin: 'nebula',
+        tenureMonths: 1,
+        assignedGalaxyId: 'gal-ballet',
+        top5: ['Ballet & Kinetic Dance', 'Acoustics & Sonic Production', 'Entomology & Living Biomes', 'Culinary Chemistry & Gastronomy', 'Space & Astrophysics'],
+        notes: 'Third student in ballet cohort.'
+      },
+      {
+        id: 'stu-15',
+        name: 'Benjamin Bell',
+        avatar: '👦',
+        skin: 'biologist',
+        tenureMonths: 2,
+        assignedGalaxyId: 'gal-marine',
+        top5: ['Marine Biology & Ocean Abyss', 'Paleontology & Fossil History', 'Entomology & Living Biomes', 'Space & Astrophysics', 'Robotics & Autonomous Systems'],
+        notes: 'Coral reef ecosystem modeler.'
+      },
+      {
+        id: 'stu-16',
+        name: 'Grace Hopper-Lee',
+        avatar: '👧',
+        skin: 'cyber',
+        tenureMonths: 3,
+        assignedGalaxyId: 'gal-robotics',
+        top5: ['Robotics & Autonomous Systems', 'Space & Astrophysics', 'Culinary Chemistry & Gastronomy', 'Acoustics & Sonic Production', 'Paleontology & Fossil History'],
+        notes: 'Circuit board routing specialist.'
+      },
+      {
+        id: 'stu-17',
+        name: 'Oliver Queen',
+        avatar: '👦',
+        skin: 'sol',
+        tenureMonths: 1,
+        assignedGalaxyId: 'gal-paleo',
+        top5: ['Paleontology & Fossil History', 'Space & Astrophysics', 'Marine Biology & Ocean Abyss', 'Entomology & Living Biomes', 'Robotics & Autonomous Systems'],
+        notes: 'Dinosaur locomotion research.'
+      },
+      {
+        id: 'stu-18',
+        name: 'Ruby Rose',
+        avatar: '👧',
+        skin: 'nebula',
+        tenureMonths: 1,
+        assignedGalaxyId: 'gal-culinary',
+        top5: ['Culinary Chemistry & Gastronomy', 'Ballet & Kinetic Dance', 'Entomology & Living Biomes', 'Marine Biology & Ocean Abyss', 'Acoustics & Sonic Production'],
+        notes: 'Fermentation microbiology project.'
+      },
+      {
+        id: 'stu-19',
+        name: 'Kai Takahashi',
+        avatar: '👦',
+        skin: 'astronaut',
+        tenureMonths: 2,
+        assignedGalaxyId: 'gal-space',
+        top5: ['Space & Astrophysics', 'Robotics & Autonomous Systems', 'Acoustics & Sonic Production', 'Paleontology & Fossil History', 'Marine Biology & Ocean Abyss'],
+        notes: 'Gravitational wave simulation.'
+      },
+      {
+        id: 'stu-20',
+        name: 'Lily Evans',
+        avatar: '👧',
+        skin: 'biologist',
+        tenureMonths: 1,
+        assignedGalaxyId: 'gal-bugs',
+        top5: ['Entomology & Living Biomes', 'Marine Biology & Ocean Abyss', 'Culinary Chemistry & Gastronomy', 'Ballet & Kinetic Dance', 'Space & Astrophysics'],
+        notes: 'Ant trail algorithmic routing.'
+      },
+      {
+        id: 'stu-21',
+        name: 'Gabriel Silva',
+        avatar: '👦',
+        skin: 'cyber',
+        tenureMonths: 1,
+        assignedGalaxyId: 'gal-audio',
+        top5: ['Acoustics & Sonic Production', 'Robotics & Autonomous Systems', 'Space & Astrophysics', 'Culinary Chemistry & Gastronomy', 'Paleontology & Fossil History'],
+        notes: 'Harmonic resonance in materials.'
+      },
+      {
+        id: 'stu-22',
+        name: 'Mia Wong',
+        avatar: '👧',
+        skin: 'nebula',
+        tenureMonths: 2,
+        assignedGalaxyId: 'gal-marine',
+        top5: ['Marine Biology & Ocean Abyss', 'Ballet & Kinetic Dance', 'Entomology & Living Biomes', 'Space & Astrophysics', 'Culinary Chemistry & Gastronomy'],
+        notes: 'Kelp forest carbon absorption.'
+      },
+      {
+        id: 'stu-23',
+        name: 'Samuel Drake',
+        avatar: '👦',
+        skin: 'sol',
+        tenureMonths: 1,
+        assignedGalaxyId: null, // Unassigned outlier
+        top5: ['Paleontology & Fossil History', 'Robotics & Autonomous Systems', 'Space & Astrophysics', 'Entomology & Living Biomes', 'Marine Biology & Ocean Abyss'],
+        notes: 'Looking for hands-on field experiments.'
+      },
+      {
+        id: 'stu-24',
+        name: 'Isabella Cruz',
+        avatar: '👧',
+        skin: 'astronaut',
+        tenureMonths: 2,
+        assignedGalaxyId: 'gal-culinary',
+        top5: ['Culinary Chemistry & Gastronomy', 'Space & Astrophysics', 'Ballet & Kinetic Dance', 'Marine Biology & Ocean Abyss', 'Acoustics & Sonic Production'],
+        notes: 'Food preservation for long space voyages.'
+      }
+    ];
+
+    // State
+    let activeGalaxies = [...INITIAL_GALAXIES];
+    let classStudents = [...STUDENTS];
+    let selectedStudentId = null;
+    let draggedStudentId = null;
+    let currentRosterFilter = 'unassigned'; // 'unassigned' | 'all'
+    let searchQuery = '';
+
+    /* =========================================================================
+       DOM ELEMENTS
+       ========================================================================= */
+    const galaxiesGridEl = document.getElementById('galaxies-grid');
+    const rosterListEl = document.getElementById('roster-list');
+    const unassignedBadgeEl = document.getElementById('unassigned-badge');
+    const rosterCountEl = document.getElementById('roster-count');
+    const toastContainerEl = document.getElementById('toast-container');
+    const studentDrawerEl = document.getElementById('student-drawer');
+    const drawerContentEl = document.getElementById('drawer-content');
+    const modalVettingEl = document.getElementById('modal-vetting');
+    const modalIntakeEl = document.getElementById('modal-intake');
+
+    /* =========================================================================
+       RENDER FUNCTIONS
+       ========================================================================= */
+
+    // Render Galaxies on Spatial Canvas
+    function renderGalaxies() {
+      galaxiesGridEl.innerHTML = '';
+
+      activeGalaxies.forEach(galaxy => {
+        const assignedStudents = classStudents.filter(s => s.assignedGalaxyId === galaxy.id);
+        const card = document.createElement('div');
+        card.className = `galaxy-cluster relative glass-panel rounded-2xl p-5 border ${galaxy.borderColor} flex flex-col justify-between overflow-hidden group min-h-[290px]`;
+        card.id = `cluster-${galaxy.id}`;
+        card.dataset.galaxyId = galaxy.id;
+
+        // Visual Cluster Header
+        card.innerHTML = `
+          <!-- Ambient Galaxy Glow -->
+          <div class="absolute -top-16 -right-16 w-36 h-36 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition pointer-events-none" style="background-color: ${galaxy.color}"></div>
+
+          <!-- Affinity Match Drop Target Indicator (Hidden by default, shown on drag hover) -->
+          <div class="drop-status-overlay absolute inset-0 z-30 pointer-events-none rounded-2xl opacity-0 transition-opacity flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div class="drop-icon text-3xl mb-1"></div>
+            <div class="drop-text text-xs font-bold font-space uppercase tracking-wider"></div>
+          </div>
+
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-md" style="background: ${galaxy.color}22; border: 1px solid ${galaxy.color}66;">
+                  ${galaxy.icon}
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-white font-space leading-tight">${galaxy.name}</h3>
+                  <span class="text-[10px] uppercase tracking-wider text-slate-400">${galaxy.category}</span>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background: ${galaxy.color}1a; color: ${galaxy.color}; border: 1px solid ${galaxy.color}40;">
+                ${assignedStudents.length} Students
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 mb-4 line-clamp-2">${galaxy.description}</p>
+          </div>
+
+          <!-- Orbit Container / Student Entities -->
+          <div class="relative bg-slate-950/60 rounded-xl p-3 border border-white/5 min-h-[140px] flex-1 flex flex-col justify-between">
+            <div class="flex items-center justify-between text-[10px] text-slate-400 mb-2">
+              <span>ORBITAL CREW</span>
+              <span class="font-mono text-cyan-400">${assignedStudents.length}/5 capacity</span>
+            </div>
+
+            <div class="student-orbit-slots flex flex-wrap gap-2 items-center flex-1 content-start" id="slots-${galaxy.id}">
+              ${assignedStudents.length === 0 ? `
+                <div class="w-full h-full flex flex-col items-center justify-center text-slate-500 text-xs py-4 border border-dashed border-white/10 rounded-lg">
+                  <span>Drop students here</span>
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Orbit ring visual accent -->
+            <div class="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-500">
+              <span>Match Status: ${assignedStudents.filter(s => s.top5.includes(galaxy.name)).length}/${assignedStudents.length} Affinities</span>
+              <button class="text-cyan-400 hover:text-cyan-300 text-[10px] font-semibold" onclick="viewGalaxyInspect('${galaxy.id}')">Inspect</button>
+            </div>
+          </div>
+        `;
+
+        galaxiesGridEl.appendChild(card);
+
+        // Populate students inside the orbital slots
+        const slotsEl = card.querySelector(`#slots-${galaxy.id}`);
+        assignedStudents.forEach(student => {
+          const badge = createStudentElement(student, false);
+          slotsEl.appendChild(badge);
+        });
+
+        // Set up Drag & Drop Listeners for this Galaxy Cluster
+        setupGalaxyDropZone(card, galaxy);
+      });
+    }
+
+    // Create student DOM element (draggable)
+    function createStudentElement(student, isRosterView = false) {
+      const el = document.createElement('div');
+      const skinData = AVATAR_SKINS[student.skin] || AVATAR_SKINS.astronaut;
+      
+      // Determine if currently assigned to one of their Top 5
+      const currentGalaxy = activeGalaxies.find(g => g.id === student.assignedGalaxyId);
+      const isAffinityMatch = currentGalaxy ? student.top5.includes(currentGalaxy.name) : false;
+      const isMismatch = currentGalaxy && !isAffinityMatch;
+
+      el.id = `student-${student.id}`;
+      el.dataset.studentId = student.id;
+      el.draggable = true;
+
+      if (isRosterView) {
+        el.className = `student-badge p-2.5 rounded-xl border border-white/10 bg-slate-900/80 hover:bg-slate-800/90 flex items-center justify-between gap-3 group transition`;
+        el.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <div class="relative w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-base border border-white/10">
+              ${student.avatar}
+              <span class="absolute -bottom-1 -right-1 text-[10px]">${skinData.icon}</span>
+            </div>
+            <div>
+              <div class="text-xs font-semibold text-white group-hover:text-cyan-300 transition">${student.name}</div>
+              <div class="text-[10px] text-slate-400">#1: <span class="text-slate-300">${student.top5[0]}</span></div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            ${student.assignedGalaxyId ? `
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Assigned</span>
+            ` : `
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Unassigned</span>
+            `}
+            <button class="p-1 text-slate-400 hover:text-white" onclick="event.stopPropagation(); openStudentDrawer('${student.id}')" title="Inspect Student">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+          </div>
+        `;
+      } else {
+        // Orbit Card Badge
+        el.className = `student-badge px-2.5 py-1.5 rounded-lg border flex items-center gap-2 animate-pop-up ${
+          isMismatch 
+            ? 'mismatch-alert-ring bg-rose-950/80 text-rose-200 border-rose-500' 
+            : 'bg-slate-900/90 text-slate-200 border-white/10 hover:border-cyan-400'
+        }`;
+        
+        el.innerHTML = `
+          <div class="relative text-sm">
+            ${student.avatar}
+            ${isMismatch ? `
+              <span class="absolute -top-1 -right-1.5 w-3 h-3 bg-rose-600 text-white rounded-full flex items-center justify-center text-[8px] font-bold" title="Mismatch with Top 5 Preferences">!</span>
+            ` : `
+              <span class="absolute -bottom-1 -right-1 text-[9px]">${skinData.icon}</span>
+            `}
+          </div>
+          <div class="flex flex-col text-left">
+            <span class="text-xs font-medium leading-none">${student.name}</span>
+            <span class="text-[9px] text-slate-400 leading-tight mt-0.5">
+              ${isMismatch ? '<span class="text-rose-400 font-semibold">Mismatch Alert</span>' : `${student.tenureMonths}m tenure`}
+            </span>
+          </div>
+        `;
+      }
+
+      // Drag event hooks
+      el.addEventListener('dragstart', (e) => {
+        draggedStudentId = student.id;
+        e.dataTransfer.setData('text/plain', student.id);
+        e.dataTransfer.effectAllowed = 'move';
+        el.classList.add('opacity-40');
+        audioSynth.playPop();
+      });
+
+      el.addEventListener('dragend', () => {
+        el.classList.remove('opacity-40');
+        draggedStudentId = null;
+        clearDropHighlights();
+      });
+
+      el.addEventListener('click', () => {
+        openStudentDrawer(student.id);
+      });
+
+      return el;
+    }
+
+    // Setup Galaxy Cluster Drag & Drop target
+    function setupGalaxyDropZone(card, galaxy) {
+      const overlay = card.querySelector('.drop-status-overlay');
+      const dropIcon = card.querySelector('.drop-icon');
+      const dropText = card.querySelector('.drop-text');
+
+      card.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        if (!draggedStudentId) return;
+        const student = classStudents.find(s => s.id === draggedStudentId);
+        if (!student) return;
+
+        const isAffinityMatch = student.top5.includes(galaxy.name);
+        overlay.classList.remove('opacity-0');
+
+        if (isAffinityMatch) {
+          card.classList.add('drag-target-valid');
+          card.classList.remove('drag-target-warning');
+          overlay.style.backgroundColor = 'rgba(16, 185, 129, 0.4)';
+          dropIcon.innerHTML = '✨';
+          const rank = student.top5.indexOf(galaxy.name) + 1;
+          dropText.innerHTML = `<span class="text-emerald-300">Preference Match (#${rank})</span>`;
+        } else {
+          card.classList.add('drag-target-warning');
+          card.classList.remove('drag-target-valid');
+          overlay.style.backgroundColor = 'rgba(239, 68, 68, 0.5)';
+          dropIcon.innerHTML = '⚠️';
+          dropText.innerHTML = `<span class="text-rose-300">Red Ring: Outside Top 5 Choices!</span>`;
+        }
+      });
+
+      card.addEventListener('dragleave', (e) => {
+        if (!card.contains(e.relatedTarget)) {
+          card.classList.remove('drag-target-valid', 'drag-target-warning');
+          overlay.classList.add('opacity-0');
+        }
+      });
+
+      card.addEventListener('drop', (e) => {
+        e.preventDefault();
+        card.classList.remove('drag-target-valid', 'drag-target-warning');
+        overlay.classList.add('opacity-0');
+
+        const studentId = e.dataTransfer.getData('text/plain') || draggedStudentId;
+        if (!studentId) return;
+
+        assignStudentToGalaxy(studentId, galaxy.id);
+      });
+    }
+
+    function clearDropHighlights() {
+      document.querySelectorAll('.galaxy-cluster').forEach(card => {
+        card.classList.remove('drag-target-valid', 'drag-target-warning');
+        const overlay = card.querySelector('.drop-status-overlay');
+        if (overlay) overlay.classList.add('opacity-0');
+      });
+    }
+
+    // Assignment Logic with Feedback (Matching vs Mismatch Red Circle)
+    function assignStudentToGalaxy(studentId, galaxyId) {
+      const student = classStudents.find(s => s.id === studentId);
+      const targetGalaxy = activeGalaxies.find(g => g.id === galaxyId);
+      if (!student || !targetGalaxy) return;
+
+      const previousGalaxyId = student.assignedGalaxyId;
+      const isAffinityMatch = student.top5.includes(targetGalaxy.name);
+
+      student.assignedGalaxyId = galaxyId;
+
+      if (isAffinityMatch) {
+        audioSynth.playChime();
+        const rank = student.top5.indexOf(targetGalaxy.name) + 1;
+        showToast(`🎉 ${student.name} popped into ${targetGalaxy.name}! (Rank #${rank} Match)`, 'success');
+      } else {
+        // Red warning circle scenario explicitly described in transcript seg_660
+        audioSynth.playWarning();
+        showToast(`⚠️ Warning: ${student.name} placed into ${targetGalaxy.name} without it being in their Top 5 list!`, 'warning');
+      }
+
+      // Re-render
+      renderGalaxies();
+      renderRoster();
+      if (selectedStudentId === studentId) {
+        renderStudentDrawer(student);
+      }
+    }
+
+    // Render Side Dock Roster
+    function renderRoster() {
+      rosterListEl.innerHTML = '';
+
+      let filtered = classStudents.filter(s => {
+        const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              s.top5.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+        if (!matchesSearch) return false;
+        if (currentRosterFilter === 'unassigned') {
+          return !s.assignedGalaxyId;
+        }
+        return true;
+      });
+
+      const unassignedCount = classStudents.filter(s => !s.assignedGalaxyId).length;
+      unassignedBadgeEl.innerText = unassignedCount;
+      rosterCountEl.innerText = classStudents.length;
+
+      if (filtered.length === 0) {
+        rosterListEl.innerHTML = `
+          <div class="text-center py-8 text-slate-500 text-xs">
+            <svg class="w-8 h-8 mx-auto mb-2 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            No students matching this filter.
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(student => {
+        const badge = createStudentElement(student, true);
+        rosterListEl.appendChild(badge);
+      });
+    }
+
+    // Student Detail Drawer
+    function openStudentDrawer(studentId) {
+      selectedStudentId = studentId;
+      const student = classStudents.find(s => s.id === studentId);
+      if (!student) return;
+
+      renderStudentDrawer(student);
+      studentDrawerEl.classList.remove('translate-x-full');
+    }
+
+    function renderStudentDrawer(student) {
+      const currentGalaxy = activeGalaxies.find(g => g.id === student.assignedGalaxyId);
+      const isAffinityMatch = currentGalaxy ? student.top5.includes(currentGalaxy.name) : false;
+      const skinData = AVATAR_SKINS[student.skin] || AVATAR_SKINS.astronaut;
+
+      drawerContentEl.innerHTML = `
+        <div class="flex items-center gap-3 p-4 rounded-xl bg-slate-900/80 border border-white/10">
+          <div class="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-3xl border border-white/10 relative">
+            ${student.avatar}
+            <span class="absolute -bottom-1 -right-1 text-sm bg-slate-900 rounded-full p-0.5">${skinData.icon}</span>
+          </div>
+          <div>
+            <h4 class="text-base font-bold text-white font-space">${student.name}</h4>
+            <div class="text-xs text-slate-400">Tenure: <span class="text-cyan-400 font-semibold">${student.tenureMonths} Months</span></div>
+            <div class="text-[11px] text-slate-500 mt-0.5">Equipped Skin: <span class="text-purple-300 font-medium">${skinData.name}</span></div>
+          </div>
+        </div>
+
+        <!-- Current Assignment Status -->
+        <div class="p-3.5 rounded-xl border ${
+          !currentGalaxy ? 'border-amber-500/30 bg-amber-950/20' :
+          isAffinityMatch ? 'border-emerald-500/30 bg-emerald-950/20' :
+          'border-rose-500/40 bg-rose-950/30 mismatch-alert-ring'
+        }">
+          <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400">Current Assignment</div>
+          <div class="text-sm font-bold text-white mt-1 flex items-center justify-between">
+            <span>${currentGalaxy ? currentGalaxy.name : 'Unassigned (In Dock)'}</span>
+            ${currentGalaxy ? (
+              isAffinityMatch ? '<span class="text-xs text-emerald-400 font-normal">✓ In Top 5</span>' :
+              '<span class="text-xs text-rose-400 font-bold">⚠️ Red Circle Override</span>'
+            ) : ''}
+          </div>
+          <p class="text-xs text-slate-400 mt-1">${student.notes}</p>
+        </div>
+
+        <!-- Submitted Top 5 Preferences -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-300 font-space">Submitted Top 5 Interests</h5>
+            <span class="text-[10px] text-slate-400">Ranked by Priority</span>
+          </div>
+          <div class="space-y-1.5">
+            ${student.top5.map((topic, idx) => {
+              const matchingGalaxy = activeGalaxies.find(g => g.name === topic);
+              const isCurrent = currentGalaxy && currentGalaxy.name === topic;
+              return `
+                <div class="p-2 rounded-lg text-xs flex items-center justify-between ${
+                  isCurrent ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-200' :
+                  matchingGalaxy ? 'bg-white/5 border border-white/5 text-slate-300' :
+                  'bg-white/5 border border-dashed border-slate-700 text-slate-500'
+                }">
+                  <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded-full bg-slate-800 text-[10px] flex items-center justify-center font-bold text-slate-400">${idx + 1}</span>
+                    <span>${topic}</span>
+                  </div>
+                  ${isCurrent ? '<span class="text-[10px] text-cyan-400 font-bold">ACTIVE</span>' : ''}
+                  ${!matchingGalaxy ? '<span class="text-[9px] text-slate-500">(Not in active 8)</span>' : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Skin / Avatar Personalization (seg_679) -->
+        <div>
+          <h5 class="text-xs font-bold uppercase tracking-wider text-slate-300 font-space mb-2">Select Celestial Skin</h5>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            ${Object.entries(AVATAR_SKINS).map(([key, item]) => `
+              <button onclick="changeStudentSkin('${student.id}', '${key}')" class="p-2 rounded-lg border text-left flex items-center gap-2 transition ${
+                student.skin === key ? 'border-cyan-500 bg-cyan-500/10 text-white' : 'border-white/10 bg-slate-900/60 text-slate-400 hover:text-white'
+              }">
+                <span class="text-lg">${item.icon}</span>
+                <span class="text-[11px] font-medium">${item.name}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Manual Quick Move Dropdown -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 font-space mb-2">Quick Assign to Galaxy</label>
+          <select class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500" onchange="assignStudentToGalaxy('${student.id}', this.value)">
+            <option value="">Unassign / Dock</option>
+            ${activeGalaxies.map(g => `
+              <option value="${g.id}" ${student.assignedGalaxyId === g.id ? 'selected' : ''}>
+                ${g.icon} ${g.name} ${student.top5.includes(g.name) ? '★ (Matches Top 5)' : '⚠️ (Mismatch)'}
+              </option>
+            `).join('')}
+          </select>
+        </div>
+      `;
+    }
+
+    function changeStudentSkin(studentId, skinKey) {
+      const student = classStudents.find(s => s.id === studentId);
+      if (!student) return;
+      student.skin = skinKey;
+      audioSynth.playPop();
+      renderGalaxies();
+      renderRoster();
+      renderStudentDrawer(student);
+      showToast(`Updated ${student.name}'s skin to ${AVATAR_SKINS[skinKey].name}!`, 'info');
+    }
+
+    /* =========================================================================
+       TEACHER VETTING & OVERLAP ENGINE (seg_674-678)
+       Shows topics with highest overlap and allows selecting the active 7-8
+       ========================================================================= */
+    function openVettingModal() {
+      renderVettingTopicList();
+      modalVettingEl.classList.remove('hidden');
+    }
+
+    function renderVettingTopicList() {
+      const listEl = document.getElementById('vetting-topic-list');
+      listEl.innerHTML = '';
+
+      // Calculate overlap counts across all class students' top 5
+      const frequencyMap = {};
+      classStudents.forEach(s => {
+        s.top5.forEach(t => {
+          frequencyMap[t] = (frequencyMap[t] || 0) + 1;
+        });
+      });
+
+      // Sorted descending by popularity
+      const sortedTopics = Object.entries(frequencyMap).sort((a, b) => b[1] - a[1]);
+
+      document.getElementById('stat-unique-topics').innerText = sortedTopics.length;
+      document.getElementById('stat-active-count').innerText = activeGalaxies.length;
+
+      sortedTopics.forEach(([topicName, count]) => {
+        const isActive = activeGalaxies.some(g => g.name === topicName);
+        const percent = Math.round((count / classStudents.length) * 100);
+
+        const row = document.createElement('div');
+        row.className = `p-3 rounded-xl border flex items-center justify-between gap-4 transition ${
+          isActive ? 'bg-purple-950/40 border-purple-500/40 text-white' : 'bg-slate-900/60 border-white/5 text-slate-400 hover:text-slate-200'
+        }`;
+
+        row.innerHTML = `
+          <div class="flex items-center gap-3 flex-1">
+            <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleTopicActive('${topicName}', this.checked)" class="rounded text-purple-600 focus:ring-purple-500 h-4 w-4 bg-slate-800 border-white/20">
+            <div>
+              <div class="text-xs font-bold text-white flex items-center gap-2">
+                ${topicName}
+                ${count >= 6 ? '<span class="px-1.5 py-0.2 rounded text-[9px] bg-emerald-500/20 text-emerald-300 font-semibold">High Overlap</span>' : ''}
+              </div>
+              <div class="text-[10px] text-slate-400 mt-0.5">
+                ${count} students selected this (${percent}% of class)
+              </div>
+            </div>
+          </div>
+
+          <!-- Mini Progress Bar Visualizing Overlap -->
+          <div class="w-36 hidden sm:block">
+            <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-purple-500 to-cyan-400 rounded-full" style="width: ${percent}%"></div>
+            </div>
+          </div>
+
+          <div class="text-xs font-mono font-bold ${isActive ? 'text-cyan-400' : 'text-slate-500'}">
+            ${isActive ? 'ACTIVE GALAXY' : 'STANDBY'}
+          </div>
+        `;
+
+        listEl.appendChild(row);
+      });
+    }
+
+    function toggleTopicActive(topicName, makeActive) {
+      if (makeActive) {
+        if (activeGalaxies.length >= 8) {
+          audioSynth.playWarning();
+          showToast('Maximum of 8 Active Galaxies allowed per classroom cycle!', 'warning');
+          renderVettingTopicList();
+          return;
+        }
+        // Find or create galaxy configuration
+        const existing = INITIAL_GALAXIES.find(g => g.name === topicName) || {
+          id: 'gal-' + Math.random().toString(36).substr(2, 6),
+          name: topicName,
+          category: 'Interdisciplinary',
+          color: '#8b5cf6',
+          bgGradient: 'from-purple-950/60 to-indigo-950/40',
+          borderColor: 'border-purple-500/30',
+          icon: '✨',
+          description: 'Curated student interest cluster.'
+        };
+        activeGalaxies.push(existing);
+      } else {
+        if (activeGalaxies.length <= 4) {
+          showToast('Keep at least 4 active clusters for student distribution.', 'warning');
+          renderVettingTopicList();
+          return;
+        }
+        activeGalaxies = activeGalaxies.filter(g => g.name !== topicName);
+      }
+      audioSynth.playPop();
+      renderVettingTopicList();
+      renderGalaxies();
+    }
+
+    /* =========================================================================
+       STUDENT INTAKE FORM (Top 5 Modal)
+       ========================================================================= */
+    function openIntakeModal() {
+      const selectEl = document.getElementById('intake-student-select');
+      selectEl.innerHTML = classStudents.map(s => `
+        <option value="${s.id}">${s.name} (${s.assignedGalaxyId ? 'Assigned' : 'Unassigned'})</option>
+      `).join('');
+
+      loadStudentIntoIntake(classStudents[0].id);
+      modalIntakeEl.classList.remove('hidden');
+    }
+
+    function loadStudentIntoIntake(studentId) {
+      const student = classStudents.find(s => s.id === studentId);
+      if (!student) return;
+
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById(`intake-rank-${i}`).value = student.top5[i - 1] || '';
+      }
+    }
+
+    document.getElementById('intake-student-select').addEventListener('change', (e) => {
+      loadStudentIntoIntake(e.target.value);
+    });
+
+    document.getElementById('intake-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const studentId = document.getElementById('intake-student-select').value;
+      const student = classStudents.find(s => s.id === studentId);
+      if (!student) return;
+
+      const newTop5 = [];
+      for (let i = 1; i <= 5; i++) {
+        const val = document.getElementById(`intake-rank-${i}`).value.trim();
+        if (val) newTop5.push(val);
+      }
+
+      if (newTop5.length < 3) {
+        showToast('Please enter at least top 3 interests!', 'warning');
+        return;
+      }
+
+      student.top5 = newTop5;
+      modalIntakeEl.classList.add('hidden');
+      audioSynth.playChime();
+      showToast(`Updated ${student.name}'s Top 5 Interests!`, 'success');
+      renderGalaxies();
+      renderRoster();
+      if (selectedStudentId === studentId) renderStudentDrawer(student);
+    });
+
+    /* =========================================================================
+       MONTHLY CADENCE ROTATION SIMULATION (seg_648, 656)
+       ========================================================================= */
+    document.getElementById('btn-advance-cycle').addEventListener('click', () => {
+      audioSynth.playChime();
+
+      // Advance tenure & randomly trigger kids changing passions (e.g. from bugs to ballet)
+      let changeCount = 0;
+      classStudents.forEach(s => {
+        s.tenureMonths += 1;
+        // 35% chance to shuffle interests as described: "now they're like, I don't give a f*** for bugs"
+        if (Math.random() < 0.35) {
+          const removed = s.top5.shift();
+          s.top5.push(removed);
+          s.tenureMonths = 1;
+          changeCount++;
+        }
+      });
+
+      renderGalaxies();
+      renderRoster();
+      showToast(`🗓️ Advanced to Next Monthly Cycle! (${changeCount} students shifted interest priorities)`, 'success');
+    });
+
+    /* =========================================================================
+       AUTO-ASSIGN ALGORITHM
+       Matches unassigned students to their highest ranked available galaxy
+       ========================================================================= */
+    document.getElementById('btn-auto-assign').addEventListener('click', () => {
+      let matchedCount = 0;
+      classStudents.forEach(student => {
+        if (!student.assignedGalaxyId) {
+          // Find first top5 preference that is currently an active galaxy
+          for (const pref of student.top5) {
+            const match = activeGalaxies.find(g => g.name === pref);
+            if (match) {
+              student.assignedGalaxyId = match.id;
+              matchedCount++;
+              break;
+            }
+          }
+        }
+      });
+
+      audioSynth.playChime();
+      renderGalaxies();
+      renderRoster();
+      showToast(`Auto-matched ${matchedCount} unassigned students to their preference galaxies!`, 'success');
+    });
+
+    /* =========================================================================
+       TOAST SYSTEM
+       ========================================================================= */
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200',
+        warning: 'bg-rose-950/90 border-rose-500/40 text-rose-200',
+        info: 'bg-indigo-950/90 border-indigo-500/40 text-indigo-200'
+      };
+
+      toast.className = `px-4 py-3 rounded-xl border glass-panel shadow-2xl text-xs font-medium max-w-sm pointer-events-auto flex items-start gap-2.5 animate-pop-up ${colors[type] || colors.info}`;
+      toast.innerHTML = `
+        <span class="text-base">${type === 'success' ? '🚀' : type === 'warning' ? '⚠️' : 'ℹ️'}</span>
+        <div class="flex-1">${message}</div>
+      `;
+
+      toastContainerEl.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'all 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    /* =========================================================================
+       UI CONTROLS & LISTENERS
+       ========================================================================= */
+    document.getElementById('btn-close-drawer').addEventListener('click', () => {
+      studentDrawerEl.classList.add('translate-x-full');
+      selectedStudentId = null;
+    });
+
+    document.getElementById('btn-open-vetting').addEventListener('click', openVettingModal);
+    document.getElementById('btn-close-vetting').addEventListener('click', () => modalVettingEl.classList.add('hidden'));
+    document.getElementById('btn-save-vetting').addEventListener('click', () => {
+      modalVettingEl.classList.add('hidden');
+      showToast('Galaxy curriculum locked for this monthly rotation!', 'success');
+    });
+
+    document.getElementById('btn-student-intake').addEventListener('click', openIntakeModal);
+    document.getElementById('btn-close-intake').addEventListener('click', () => modalIntakeEl.classList.add('hidden'));
+
+    // Roster filter tabs
+    document.getElementById('tab-unassigned').addEventListener('click', () => {
+      currentRosterFilter = 'unassigned';
+      document.getElementById('tab-unassigned').className = 'flex-1 py-2 font-medium text-cyan-400 border-b-2 border-cyan-400';
+      document.getElementById('tab-all-students').className = 'flex-1 py-2 font-medium text-slate-400 hover:text-slate-200';
+      renderRoster();
+    });
+
+    document.getElementById('tab-all-students').addEventListener('click', () => {
+      currentRosterFilter = 'all';
+      document.getElementById('tab-all-students').className = 'flex-1 py-2 font-medium text-cyan-400 border-b-2 border-cyan-400';
+      document.getElementById('tab-unassigned').className = 'flex-1 py-2 font-medium text-slate-400 hover:text-slate-200';
+      renderRoster();
+    });
+
+    document.getElementById('roster-search').addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      renderRoster();
+    });
+
+    document.getElementById('btn-reset-layout').addEventListener('click', () => {
+      activeGalaxies = [...INITIAL_GALAXIES];
+      classStudents = JSON.parse(JSON.stringify(STUDENTS));
+      audioSynth.playPop();
+      renderGalaxies();
+      renderRoster();
+      showToast('Reset classroom layout and orbits.', 'info');
+    });
+
+    // Inspect galaxy
+    window.viewGalaxyInspect = function(galaxyId) {
+      const g = activeGalaxies.find(item => item.id === galaxyId);
+      if (!g) return;
+      const count = classStudents.filter(s => s.assignedGalaxyId === galaxyId).length;
+      showToast(`Galaxy [${g.name}]: ${count} students currently exploring this cluster.`, 'info');
+    };
+
+    // Initial Boots
+    renderGalaxies();
+    renderRoster();
+  </script>
+</body>
+</html>
